@@ -1,7 +1,10 @@
 "use client";
+import { useRouter } from "next/navigation";
 import Layout from "./Layout";
 
 export default function Dashboard() {
+  const router = useRouter();
+  
   const projects = [
     {
       id: 1,
@@ -24,7 +27,7 @@ export default function Dashboard() {
       type: "Web App",
       description:
         "Kofejob is a freelancers marketplace where you can post projects & get instant help.",
-      projectId: "#12145",
+      projectId: "#12146",
       value: "$02,15,000",
       dueDate: "19 Oct 2023",
       totalHours: 80,
@@ -49,6 +52,10 @@ export default function Dashboard() {
       totalProgress: 4,
     },
   ];
+
+  const handleCardClick = (projectId) => {
+    router.push(`/detail/${projectId}`);
+  };
 
   return (
     <Layout>
@@ -85,7 +92,8 @@ export default function Dashboard() {
         {projects.map((project) => (
           <div
             key={project.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick(project.id)}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
           >
             {/* Priority and Status */}
             <div className="flex justify-between items-start mb-4">

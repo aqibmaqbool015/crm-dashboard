@@ -1,13 +1,16 @@
 "use client";
-
+import { usePathname } from "next/navigation";
 import { LayoutDashboard, File, Settings, MessageSquare } from "lucide-react";
+import Link from "next/link";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
+  const pathname = usePathname();
+  
   const menuItems = [
-    { name: "Dashboard", icon: <LayoutDashboard /> },
-    { name: "Services", icon: <File /> },
-    { name: "Settings", icon: <Settings /> },
-    { name: "Chat", icon: <MessageSquare /> },
+    { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
+    { name: "Services", icon: <File />, path: "/services" },
+    { name: "Settings", icon: <Settings />, path: "/settings" },
+    { name: "Chat", icon: <MessageSquare />, path: "/chat" },
   ];
 
   return (
@@ -41,10 +44,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <ul className="space-y-1 px-3">
             {menuItems.map((item) => (
               <li key={item.name}>
-                <button className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                  <span className="mr-3 text-lg">{item.icon}</span>
+                <Link 
+                  href={item.path}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    pathname === item.path 
+                      ? "bg-blue-500 text-white" 
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className="mr-3">{item.icon}</span>
                   {item.name}
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
