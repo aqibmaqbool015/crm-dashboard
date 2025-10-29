@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, File, Settings, MessageSquare, Projector, User } from "lucide-react";
+import { LayoutDashboard, File, Settings, MessageSquare, Projector, User, InspectIcon, Activity, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -10,14 +10,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
     { name: "All Projects", icon: <Projector />, path: "/projects" },
     { name: "Users", icon: <User />, path: "/users" },
-    { name: "Services", icon: <File />, path: "/services" },
-    { name: "Settings", icon: <Settings />, path: "/settings" },
+    { name: "Compliant", icon: <File />, path: "/services" },
+    { name: "Trustmark Audit", icon: <Settings />, path: "/settings" },
+    { name: "C3 Inspection", icon: <InspectIcon />, path: "/chat" },
+    { name: "Notification", icon: <AlertCircle />, path: "/chat" },
+    { name: "Activity Screen", icon: <Activity />, path: "/chat" },
     { name: "Chat", icon: <MessageSquare />, path: "/chat" },
   ];
 
   return (
     <>
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 lg:hidden"

@@ -12,26 +12,10 @@ export default function DetailPage() {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [editTextValue, setEditTextValue] = useState("");
 
-  // Sample table data
   const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      text: "Initial review completed",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      text: "Documentation verified",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      text: "Quality check passed",
-      status: "In Progress",
-    },
+    { id: 1, name: "John Doe", text: "Initial review completed" },
+    { id: 2, name: "Jane Smith", text: "Documentation verified" },
+    { id: 3, name: "Mike Johnson", text: "Quality check passed" },
   ]);
 
   const handleEdit = () => {
@@ -63,17 +47,21 @@ export default function DetailPage() {
   const handleCloseApproveModal = () => {
     setIsApproveModalOpen(false);
   };
-
-  const handleApprove = () => {
-    console.log("Approved all items");
-    // Add your approve logic here
-    setIsApproveModalOpen(false);
+  // Add these functions in your component
+  const handleApproveItem = (itemId) => {
+    setTableData((prevData) =>
+      prevData.map((item) =>
+        item.id === itemId ? { ...item, status: "Approved" } : item
+      )
+    );
   };
 
-  const handleReject = () => {
-    console.log("Rejected items");
-    // Add your reject logic here
-    setIsApproveModalOpen(false);
+  const handleRejectItem = (itemId) => {
+    setTableData((prevData) =>
+      prevData.map((item) =>
+        item.id === itemId ? { ...item, status: "Rejected" } : item
+      )
+    );
   };
 
   return (
@@ -172,19 +160,15 @@ export default function DetailPage() {
         </div>
       )}
 
-      {/* Approve Modal - Right Side Slide In */}
       {isApproveModalOpen && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={handleCloseApproveModal}
           ></div>
 
-          {/* Modal Content - Right Side */}
           <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="h-full flex flex-col">
-              {/* Modal Header */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-semibold text-gray-800">
@@ -238,17 +222,30 @@ export default function DetailPage() {
                             {item.text}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                item.status === "Completed"
-                                  ? "bg-green-100 text-green-800"
-                                  : item.status === "In Progress"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {item.status}
-                            </span>
+                            {item.status === "Approved" ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Approved
+                              </span>
+                            ) : item.status === "Rejected" ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Rejected
+                              </span>
+                            ) : (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleApproveItem(item.id)}
+                                  className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectItem(item.id)}
+                                  className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -257,19 +254,11 @@ export default function DetailPage() {
                 </div>
               </div>
 
-              {/* Modal Footer - Buttons */}
               <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
                 <button
-                  onClick={handleReject}
                   className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                 >
-                  Reject
-                </button>
-                <button
-                  onClick={handleApprove}
-                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  Approve
+                  Save
                 </button>
               </div>
             </div>
