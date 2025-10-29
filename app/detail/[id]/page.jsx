@@ -1,117 +1,80 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
 import Layout from "../../components/Layout";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { useState } from "react";
 
 export default function DetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id;
+  const [textAreaValue, setTextAreaValue] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [editTextValue, setEditTextValue] = useState("");
 
-  // Validation Schema
-  const validationSchema = Yup.object({
-    overallSubmissionStatus: Yup.string().required(
-      "Overall Submission Status is required"
-    ),
-    allPreChecks: Yup.string().required("This field is required"),
-    previousEPCDifferences: Yup.string().required("This field is required"),
-    preparationsPlanning: Yup.string().required("This field is required"),
-    c1AssessmentPAS: Yup.string().required("This field is required"),
-    eprPreDesign: Yup.string().required("This field is required"),
-    preVentilationRC1Docs: Yup.string().required("This field is required"),
-    pasHubCreateDesign: Yup.string().required("This field is required"),
-    postVentilation: Yup.string().required("This field is required"),
-    scaffoldingAssign: Yup.string().required("This field is required"),
-    material: Yup.string().required("This field is required"),
-    planDesignPIBI: Yup.string().required("This field is required"),
-    retrofitDesignCheck: Yup.string().required("This field is required"),
-    paperwork: Yup.string().required("This field is required"),
-    customerSignatures: Yup.string().required("This field is required"),
-    pasHubUploadDesign: Yup.string().required("This field is required"),
-    loftBoilerHC: Yup.string().required("This field is required"),
-    ewiInstallation: Yup.string().required("This field is required"),
-    midInstallC2Packs: Yup.string().required("This field is required"),
-    postInstallEWIPacks: Yup.string().required("This field is required"),
-    internalC3Inspection: Yup.string().required("This field is required"),
-    pendingEWIIssues: Yup.string().required("This field is required"),
-    gdgc: Yup.string().required("This field is required"),
-    ewiProWarranty: Yup.string().required("This field is required"),
-    externalC3Status: Yup.string().required("This field is required"),
-    pashubUploading: Yup.string().required("This field is required"),
-    scaffoldingRemoval: Yup.string().required("This field is required"),
-    rubbishCollections: Yup.string().required("This field is required"),
-    customerFeedbacks: Yup.string().required("This field is required"),
-    teamNotResponding: Yup.string().required("This field is required"),
-    measuresABSSAP: Yup.string().required("This field is required"),
-    audit: Yup.string().required("This field is required"),
-    installer: Yup.string().required("This field is required"),
-    customerCopyDelivered: Yup.string().required("This field is required"),
-    liveJobSheetStatus: Yup.string().required("This field is required"),
-    surveyDate: Yup.date().required("Survey date is required"),
-    firstPhotoDate: Yup.date().required("First photo date is required"),
-    ubilDate: Yup.date().required("UBIL date is required"),
-    loftInstallDate: Yup.date().required("Loft install date is required"),
-    ewiMeasuresDate: Yup.date().required("EWI measures date is required"),
-    boilerHCInstallDate: Yup.date().required(
-      "Boiler/HC install date is required"
-    ),
-    extractorFansDate: Yup.date().required("Extractor fans date is required"),
-    handoverDate: Yup.date().required("Handover date is required"),
-  });
+  // Sample table data
+  const [tableData, setTableData] = useState([
+    {
+      id: 1,
+      name: "John Doe",
+      text: "Initial review completed",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      text: "Documentation verified",
+      status: "Completed",
+    },
+    {
+      id: 3,
+      name: "Mike Johnson",
+      text: "Quality check passed",
+      status: "In Progress",
+    },
+  ]);
 
-  const formik = useFormik({
-    initialValues: {
-      overallSubmissionStatus: "",
-      allPreChecks: "",
-      previousEPCDifferences: "",
-      preparationsPlanning: "",
-      c1AssessmentPAS: "",
-      eprPreDesign: "",
-      preVentilationRC1Docs: "",
-      pasHubCreateDesign: "",
-      postVentilation: "",
-      scaffoldingAssign: "",
-      material: "",
-      planDesignPIBI: "",
-      retrofitDesignCheck: "",
-      paperwork: "",
-      customerSignatures: "",
-      pasHubUploadDesign: "",
-      loftBoilerHC: "",
-      ewiInstallation: "",
-      midInstallC2Packs: "",
-      postInstallEWIPacks: "",
-      internalC3Inspection: "",
-      pendingEWIIssues: "",
-      gdgc: "",
-      ewiProWarranty: "",
-      externalC3Status: "",
-      pashubUploading: "",
-      scaffoldingRemoval: "",
-      rubbishCollections: "",
-      customerFeedbacks: "",
-      teamNotResponding: "",
-      measuresABSSAP: "",
-      audit: "",
-      installer: "",
-      customerCopyDelivered: "",
-      liveJobSheetStatus: "",
-      surveyDate: "",
-      firstPhotoDate: "",
-      ubilDate: "",
-      loftInstallDate: "",
-      ewiMeasuresDate: "",
-      boilerHCInstallDate: "",
-      extractorFansDate: "",
-      handoverDate: "",
-    },
-    validationSchema,
-    onSubmit: (values) => {
-      console.log("Form submitted:", values);
-      alert("Form submitted successfully!");
-    },
-  });
+  const handleEdit = () => {
+    setEditTextValue(textAreaValue);
+    setIsEditModalOpen(true);
+  };
+
+  const handleApproved = () => {
+    setIsApproveModalOpen(true);
+  };
+
+  const handleRequestedUpdate = () => {
+    console.log("Requested Update button clicked");
+  };
+
+  const handleNote = () => {
+    console.log("Note button clicked");
+  };
+
+  const handleUpdate = () => {
+    setTextAreaValue(editTextValue);
+    setIsEditModalOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleCloseApproveModal = () => {
+    setIsApproveModalOpen(false);
+  };
+
+  const handleApprove = () => {
+    console.log("Approved all items");
+    // Add your approve logic here
+    setIsApproveModalOpen(false);
+  };
+
+  const handleReject = () => {
+    console.log("Rejected items");
+    // Add your reject logic here
+    setIsApproveModalOpen(false);
+  };
 
   return (
     <Layout>
@@ -132,545 +95,187 @@ export default function DetailPage() {
         </div>
       </div>
 
-      <form
-        onSubmit={formik.handleSubmit}
-        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Text Input Fields */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Overall Submission Status
-              </label>
-              <input
-                type="text"
-                name="overallSubmissionStatus"
-                value={formik.values.overallSubmissionStatus}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.overallSubmissionStatus &&
-                formik.errors.overallSubmissionStatus && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.overallSubmissionStatus}
-                  </div>
-                )}
-            </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Stage 1</h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                All Pre Checks, UBILS, UBIL videos, Datamatch, HHEV and EPR
-              </label>
-              <input
-                type="text"
-                name="allPreChecks"
-                value={formik.values.allPreChecks}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.allPreChecks && formik.errors.allPreChecks && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.allPreChecks}
-                </div>
-              )}
-            </div>
+        <textarea
+          value={textAreaValue}
+          onChange={(e) => setTextAreaValue(e.target.value)}
+          placeholder="Enter your text here..."
+          className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
+        />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Previous EPC Differences and GCGP
-              </label>
-              <input
-                type="text"
-                name="previousEPCDifferences"
-                value={formik.values.previousEPCDifferences}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.previousEPCDifferences &&
-                formik.errors.previousEPCDifferences && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.previousEPCDifferences}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Preparations/Planning Pre Loft, Ventilation, Pre HC, Pre Boiler,
-                Pre FTCH Adjustments, Management
-              </label>
-              <input
-                type="text"
-                name="preparationsPlanning"
-                value={formik.values.preparationsPlanning}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.preparationsPlanning &&
-                formik.errors.preparationsPlanning && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.preparationsPlanning}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                C1 Assessment and PAS
-              </label>
-              <input
-                type="text"
-                name="c1AssessmentPAS"
-                value={formik.values.c1AssessmentPAS}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.c1AssessmentPAS &&
-                formik.errors.c1AssessmentPAS && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.c1AssessmentPAS}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                EPR, Pre design, Assessment
-              </label>
-              <input
-                type="text"
-                name="eprPreDesign"
-                value={formik.values.eprPreDesign}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.eprPreDesign && formik.errors.eprPreDesign && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.eprPreDesign}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pre Ventilation and RC 1 Docs
-              </label>
-              <input
-                type="text"
-                name="preVentilationRC1Docs"
-                value={formik.values.preVentilationRC1Docs}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.preVentilationRC1Docs &&
-                formik.errors.preVentilationRC1Docs && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.preVentilationRC1Docs}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                PAS hub Create Design MTIP and IOE
-              </label>
-              <input
-                type="text"
-                name="pasHubCreateDesign"
-                value={formik.values.pasHubCreateDesign}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.pasHubCreateDesign &&
-                formik.errors.pasHubCreateDesign && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.pasHubCreateDesign}
-                  </div>
-                )}
-            </div>
-          </div>
-
-          {/* More Text Input Fields - Column 2 */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Post Ventilation
-              </label>
-              <input
-                type="text"
-                name="postVentilation"
-                value={formik.values.postVentilation}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.postVentilation &&
-                formik.errors.postVentilation && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.postVentilation}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Scaffolding Assign
-              </label>
-              <input
-                type="text"
-                name="scaffoldingAssign"
-                value={formik.values.scaffoldingAssign}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.scaffoldingAssign &&
-                formik.errors.scaffoldingAssign && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.scaffoldingAssign}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Material
-              </label>
-              <input
-                type="text"
-                name="material"
-                value={formik.values.material}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.material && formik.errors.material && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.material}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Plan, Design, PIBI, Survey folder Add all issues and responses
-              </label>
-              <input
-                type="text"
-                name="planDesignPIBI"
-                value={formik.values.planDesignPIBI}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.planDesignPIBI &&
-                formik.errors.planDesignPIBI && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.planDesignPIBI}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Retrofit Design Check and Plan
-              </label>
-              <input
-                type="text"
-                name="retrofitDesignCheck"
-                value={formik.values.retrofitDesignCheck}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.retrofitDesignCheck &&
-                formik.errors.retrofitDesignCheck && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.retrofitDesignCheck}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Paper Work Link to Live sheet paperwork
-              </label>
-              <input
-                type="text"
-                name="paperwork"
-                value={formik.values.paperwork}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.paperwork && formik.errors.paperwork && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.paperwork}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer signatures Original
-              </label>
-              <input
-                type="text"
-                name="customerSignatures"
-                value={formik.values.customerSignatures}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.customerSignatures &&
-                formik.errors.customerSignatures && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.customerSignatures}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                PAS hub Upload Design and RC1 and move to installation
-              </label>
-              <input
-                type="text"
-                name="pasHubUploadDesign"
-                value={formik.values.pasHubUploadDesign}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.pasHubUploadDesign &&
-                formik.errors.pasHubUploadDesign && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.pasHubUploadDesign}
-                  </div>
-                )}
-            </div>
-          </div>
-
-          {/* Date Fields and Remaining Text Fields - Column 3 */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Loft, Boiler and HC
-              </label>
-              <input
-                type="text"
-                name="loftBoilerHC"
-                value={formik.values.loftBoilerHC}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.loftBoilerHC && formik.errors.loftBoilerHC && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.loftBoilerHC}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                EWI installation
-              </label>
-              <input
-                type="text"
-                name="ewiInstallation"
-                value={formik.values.ewiInstallation}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.ewiInstallation &&
-                formik.errors.ewiInstallation && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.ewiInstallation}
-                  </div>
-                )}
-            </div>
-
-            {/* Date Fields */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Survey date
-              </label>
-              <input
-                type="date"
-                name="surveyDate"
-                value={formik.values.surveyDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.surveyDate && formik.errors.surveyDate && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.surveyDate}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                First photo of ANY First install
-              </label>
-              <input
-                type="date"
-                name="firstPhotoDate"
-                value={formik.values.firstPhotoDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.firstPhotoDate &&
-                formik.errors.firstPhotoDate && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.firstPhotoDate}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                UBIL date
-              </label>
-              <input
-                type="date"
-                name="ubilDate"
-                value={formik.values.ubilDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.ubilDate && formik.errors.ubilDate && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.ubilDate}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Loft install date
-              </label>
-              <input
-                type="date"
-                name="loftInstallDate"
-                value={formik.values.loftInstallDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.loftInstallDate &&
-                formik.errors.loftInstallDate && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.loftInstallDate}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                EWI Measures install date complete
-              </label>
-              <input
-                type="date"
-                name="ewiMeasuresDate"
-                value={formik.values.ewiMeasuresDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.ewiMeasuresDate &&
-                formik.errors.ewiMeasuresDate && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.ewiMeasuresDate}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Boiler/HC install Date
-              </label>
-              <input
-                type="date"
-                name="boilerHCInstallDate"
-                value={formik.values.boilerHCInstallDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.boilerHCInstallDate &&
-                formik.errors.boilerHCInstallDate && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.boilerHCInstallDate}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Extractor fans ventilation date
-              </label>
-              <input
-                type="date"
-                name="extractorFansDate"
-                value={formik.values.extractorFansDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.extractorFansDate &&
-                formik.errors.extractorFansDate && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.extractorFansDate}
-                  </div>
-                )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Handover date
-              </label>
-              <input
-                type="date"
-                name="handoverDate"
-                value={formik.values.handoverDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {formik.touched.handoverDate && formik.errors.handoverDate && (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.handoverDate}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="mt-8 flex justify-end">
+        {/* Buttons Container */}
+        <div className="flex gap-3 mt-4">
           <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            onClick={handleEdit}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Submit Form
+            Edit
+          </button>
+          <button
+            onClick={handleApproved}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            Approved
+          </button>
+          <button
+            onClick={handleRequestedUpdate}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          >
+            Requested Update
+          </button>
+          <button
+            onClick={handleNote}
+            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            Note
           </button>
         </div>
-      </form>
+      </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800">Stage 1</h3>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <textarea
+                value={editTextValue}
+                onChange={(e) => setEditTextValue(e.target.value)}
+                placeholder="Edit your text here..."
+                className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Modal - Right Side Slide In */}
+      {isApproveModalOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={handleCloseApproveModal}
+          ></div>
+
+          {/* Modal Content - Right Side */}
+          <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <div className="h-full flex flex-col">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Stage 1
+                  </h3>
+                  <button
+                    onClick={handleCloseApproveModal}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body - Table */}
+              <div className="flex-1 overflow-auto p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Name
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Text
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                            {item.name}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                            {item.text}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-3 text-sm">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                item.status === "Completed"
+                                  ? "bg-green-100 text-green-800"
+                                  : item.status === "In Progress"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal Footer - Buttons */}
+              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={handleReject}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={handleApprove}
+                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
