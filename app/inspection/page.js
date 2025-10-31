@@ -2,37 +2,36 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import { Plus } from "lucide-react";
 
-export default function UsersPage() {
+export default function InspectionPage() {
   const router = useRouter();
   const [users, setUsers] = useState([
     {
       id: 1,
+      report: "fine",
       number: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      moduleName: "Dashboard",
+      address: "Street",
+      status: "pending",
+      result: "fail",
+      issues: "Text box",
+      inspector: "pending",
+      date: "23-09-2025",
+      mark: "mark with",
+      completionStatus: "pending",
     },
     {
-      id: 2,
-      number: 2,
-      name: "Sarah Smith",
-      email: "sarah.smith@example.com",
-      moduleName: "Projects",
-    },
-    {
-      id: 3,
-      number: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@example.com",
-      moduleName: "Users",
-    },
-    {
-      id: 4,
-      number: 4,
-      name: "Emily Brown",
-      email: "emily.brown@example.com",
-      moduleName: "Reports",
+      id: 1,
+      report: "fine",
+      number: 1,
+      address: "Street",
+      status: "pending",
+      result: "fail",
+      issues: "Text box",
+      inspector: "pending",
+      date: "23-09-2025",
+      mark: "mark with",
+      completionStatus: "pending",
     },
   ]);
 
@@ -54,17 +53,19 @@ export default function UsersPage() {
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  C3 Inspection
+                </h1>
                 <p className="text-gray-600 mt-1">
-                  Manage system users and their permissions.
+                  Manage system inspection and their permissions.
                 </p>
               </div>
               <button
-                onClick={() => router.push("/create-user")}
+                onClick={() => router.push("/add-inspection")}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center"
               >
                 <Plus className="w-5 h-5 text-white mx-1" />
-                Add User
+                Add Inspection
               </button>
             </div>
           </div>
@@ -77,19 +78,34 @@ export default function UsersPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      C3 Reports
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Number
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
+                      Address
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
+                      To Tecnika Assigned Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Module Name
+                      Report
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      Issues
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tecnika to Inspector Assigned Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Expected Date of Completion
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mark Relved
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Project Completion Status
                     </th>
                   </tr>
                 </thead>
@@ -97,32 +113,36 @@ export default function UsersPage() {
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.number}
+                        {user.report}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.name}
+                        {user.number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.email}
+                        {user.address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {user.moduleName}
+                          {user.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => handleEdit(user.id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                        {user.result}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.issues}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.inspector}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.date}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.mark}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.completionStatus}
                       </td>
                     </tr>
                   ))}

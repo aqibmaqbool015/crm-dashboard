@@ -10,11 +10,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
     { name: "All Projects", icon: <Projector />, path: "/projects" },
     { name: "Users", icon: <User />, path: "/users" },
-    { name: "Compliant", icon: <File />, path: "/services" },
-    { name: "Trustmark Audit", icon: <Settings />, path: "/settings" },
-    { name: "C3 Inspection", icon: <InspectIcon />, path: "/chat" },
-    { name: "Notification", icon: <AlertCircle />, path: "/chat" },
-    { name: "Activity Screen", icon: <Activity />, path: "/chat" },
+    { name: "Complaint", icon: <File />, path: "/complaint" },
+    { name: "Trustmark Audit", icon: <Settings />, path: "/trustmark" },
+    { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection" },
+    { name: "Notifications", icon: <AlertCircle />, path: "/notifications" },
+    { name: "Activity Screen", icon: <Activity />, path: "/activity" },
     { name: "Chat", icon: <MessageSquare />, path: "/chat" },
   ];
 

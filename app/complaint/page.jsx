@@ -2,37 +2,30 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import { Plus } from "lucide-react";
 
-export default function UsersPage() {
+export default function ComplaintPage() {
   const router = useRouter();
   const [users, setUsers] = useState([
     {
       id: 1,
       number: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      moduleName: "Dashboard",
+      address: "Street 5",
+      info: "info as",
+      date: "27-09-2024",
+      expectDate: "27-10-2024",
+      review: "Good",
+      status: "Pending",
     },
     {
-      id: 2,
-      number: 2,
-      name: "Sarah Smith",
-      email: "sarah.smith@example.com",
-      moduleName: "Projects",
-    },
-    {
-      id: 3,
-      number: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@example.com",
-      moduleName: "Users",
-    },
-    {
-      id: 4,
-      number: 4,
-      name: "Emily Brown",
-      email: "emily.brown@example.com",
-      moduleName: "Reports",
+      id: 1,
+      number: 1,
+      address: "Street 5",
+      info: "info as",
+      date: "27-09-2024",
+      expectDate: "27-10-2024",
+      review: "Good",
+      status: "Pending",
     },
   ]);
 
@@ -54,17 +47,19 @@ export default function UsersPage() {
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Users Complaint
+                </h1>
                 <p className="text-gray-600 mt-1">
-                  Manage system users and their permissions.
+                  Manage users Complaint and their permissions.
                 </p>
               </div>
               <button
-                onClick={() => router.push("/create-user")}
+                onClick={() => router.push("/add-complaint")}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center"
               >
                 <Plus className="w-5 h-5 text-white mx-1" />
-                Add User
+                Add Complaint
               </button>
             </div>
           </div>
@@ -77,19 +72,26 @@ export default function UsersPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Number
+                      Id
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
+                      Address
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
+                      Complaint information
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Module Name
+                      Date of complaint
+                    </th>
+
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Expected date of completion
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      Review of testing
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
                     </th>
                   </tr>
                 </thead>
@@ -100,29 +102,24 @@ export default function UsersPage() {
                         {user.number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.name}
+                        {user.address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.email}
+                        {user.info}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {user.moduleName}
+                          {user.date}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => handleEdit(user.id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                        {user.expectDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.review}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {user.status}
                       </td>
                     </tr>
                   ))}
@@ -137,32 +134,19 @@ export default function UsersPage() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">
-                        {user.name}
+                        {user.number}
                       </h3>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-sm text-gray-500">{user.address}</p>
                     </div>
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.moduleName}
+                      {user.info}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      #{user.number}
-                    </span>
-                    <div className="space-x-2">
-                      <button
-                        onClick={() => handleEdit(user.id)}
-                        className="text-blue-600 hover:text-blue-900 text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="text-red-600 hover:text-red-900 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <span className="text-sm text-gray-500">{user.date}</span>
+                    <div className="space-x-2">{user.expectDate}</div>
+                    <div className="space-x-2">{user.review}</div>
+                    <div className="space-x-2">{user.status}</div>
                   </div>
                 </div>
               ))}
