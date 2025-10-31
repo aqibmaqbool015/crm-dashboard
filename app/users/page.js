@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import { Plus } from "lucide-react";
 
 export default function UsersPage() {
   const router = useRouter();
