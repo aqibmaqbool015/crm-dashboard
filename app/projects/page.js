@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import Layout from "../components/Layout";
+import { useState } from "react";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -28,8 +29,17 @@ export default function ProjectDetail() {
     progress: 2,
     totalProgress: 4,
     lastUpdated: "24/10/2023: 10:45 pm",
-    pendingUpdates: ["sloge 5", "sloge 10", "sloge 6 are incomplete"],
-    requestedUpdates: ["sloge 4", "sloge 10", "sloge 9"],
+    pendingUpdates: ["stages 5", "stages 10", "stages 6 are incomplete"],
+    requestedUpdates: [
+      "stages 4",
+      "stages 7",
+      "stages 8",
+      "stages 9",
+      "stages 11",
+      "stages 12",
+      "stages 14",
+      "stages 15",
+    ],
   };
 
   const pieData = [
@@ -59,10 +69,31 @@ export default function ProjectDetail() {
     router.push("/create-project");
   };
 
+  const [formData, setFormData] = useState({
+    active: "",
+    pending: "",
+    hold: "",
+    completed: "",
+  });
+
+  const modules = [
+    { value: "active", label: "Active" },
+    { value: "pending", label: "Pending" },
+    { value: "hold", label: "Hold" },
+    { value: "completed", label: "Completed" },
+  ];
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto cursor-pointer">
+        <div className="max-w-6xl mx-auto">
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
@@ -87,8 +118,24 @@ export default function ProjectDetail() {
               </div> */}
             </div>
           </div>
-          <div className="" onClick={handleCardClick}>
-            <div className="grid md:grid-cols-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="md:flex items-center justify-between">
+              <div className="">
+                <h2 className="text-lg font-bold text-gray-900">
+                  Project Name - 403 greenlume
+                </h2>
+              </div>
+              <div className="">
+                <button
+                  onClick={handleCardClick}
+                  type="button"
+                  className="px-6 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 mt-4">
               <div>
                 <div className="h-64 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
@@ -122,10 +169,21 @@ export default function ProjectDetail() {
                 </div>
               </div>
               <div>
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Project Name - 403 greenlume
-                  </h2>
+                <div className="my-3">
+                  <select
+                    id="active"
+                    name="active"
+                    value={formData.active}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select a status</option>
+                    {modules.map((module) => (
+                      <option key={module.value} value={module.value}>
+                        {module.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mb-6">
                   <h3 className="text-md font-semibold text-gray-800 mb-3">
@@ -157,12 +215,14 @@ export default function ProjectDetail() {
                     ))}
                   </div>
                 </div>
-                <div className="mb-6">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Last updated:</span>{" "}
-                    {project.lastUpdated}
-                  </p>
-                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Last updated:</span>{" "}
+                  {project.lastUpdated}
+                </p>
               </div>
             </div>
           </div>
