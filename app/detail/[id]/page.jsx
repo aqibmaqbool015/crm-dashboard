@@ -2,6 +2,12 @@
 import { useParams, useRouter } from "next/navigation";
 import Layout from "../../components/Layout";
 import { useState } from "react";
+import {
+  AudioWaveform,
+  AudioWaveformIcon,
+  Download,
+  ListChecks,
+} from "lucide-react";
 
 export default function DetailPage() {
   const params = useParams();
@@ -167,64 +173,184 @@ export default function DetailPage() {
             <p className="text-gray-600">Home &gt; Projects &gt; Detail</p>
           </div>
           <button
-            onClick={() => router.back()}
+            onClick={handleNote}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            Back
+            Add Note
           </button>
         </div>
       </div>
+      <div className="my-3">
+        <button
+          onClick={handleNote}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mx-3"
+        >
+          Add Note
+        </button>
+        <button
+          onClick={handleNote}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mx-3"
+        >
+          Add Note
+        </button>
+      </div>
       <div className="grid grid-cols-12 gap-4">
         {/* First column (8/12) */}
-        <div className="col-span-12 md:col-span-8">
+        <div className="col-span-12 md:col-span-4">
           <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">
               Stage 1
             </h2>
-
+            <p className="text-[13px] text-gray-600 mb-2">
+              All Pre Checks, UBILS, UBIL videos, Datamatch, HHEV and EPR
+            </p>
             <textarea
               value={editTextCustomerValue}
               onChange={(e) => setEditTextCustomerValue(e.target.value)}
               placeholder="Enter your text here..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
+              className="w-full min-h-[280px] p-3 border text-[10px] border-gray-300 rounded-lg resize-none outline-none shadow-none"
             />
-
             {/* Buttons Container */}
             <div className="flex gap-3 mt-4">
               <button
-                onClick={handleEdit}
+                onClick={handleApproved}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
-                Approvals
+                <ListChecks />
               </button>
-              <button
-                onClick={handleApproved}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Approved
+              <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                <AudioWaveformIcon />
               </button>
               <button
                 onClick={handleRequestedUpdate}
                 className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
               >
-                Requested Update
+                <AudioWaveform />
               </button>
-              <button
+              {/* <button
                 onClick={handleNote}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
                 Note
-              </button>
+              </button> */}
               <button className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                Save
+                <Download />
               </button>
             </div>
           </div>
         </div>
-
         <div className="col-span-12 md:col-span-4">
           <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Note</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">
+              Stage 2
+            </h2>
+            <p className="text-[13px] text-gray-600 mb-2">
+              All Pre Checks, UBILS, UBIL videos, Datamatch, HHEV and EPR
+            </p>
+            <textarea
+              value={editTextCustomerValue}
+              onChange={(e) => setEditTextCustomerValue(e.target.value)}
+              placeholder="Enter your text here..."
+              className="w-full min-h-[280px] p-3 border text-[10px] border-gray-300 rounded-lg resize-none outline-none shadow-none"
+            />
+            {/* Buttons Container */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleApproved}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <ListChecks />
+              </button>
+              <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                <AudioWaveformIcon />
+              </button>
+              <button
+                onClick={handleRequestedUpdate}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+              >
+                <AudioWaveform />
+              </button>
+              {/* <button
+                onClick={handleNote}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Note
+              </button> */}
+              <button className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <Download />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">
+              Stage 3
+            </h2>
+            <p className="text-[13px] text-gray-600 mb-2">
+              All Pre Checks, UBILS, UBIL videos, Datamatch, HHEV and EPR
+            </p>
+            <textarea
+              value={editTextCustomerValue}
+              onChange={(e) => setEditTextCustomerValue(e.target.value)}
+              placeholder="Enter your text here..."
+              className="w-full min-h-[280px] p-3 border text-[10px] border-gray-300 rounded-lg resize-none outline-none shadow-none"
+            />
+            {/* Buttons Container */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleApproved}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <ListChecks />
+              </button>
+              <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                <AudioWaveformIcon />
+              </button>
+              <button
+                onClick={handleRequestedUpdate}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+              >
+                <AudioWaveform />
+              </button>
+              {/* <button
+                onClick={handleNote}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Note
+              </button> */}
+              <button className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <Download />
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* <div className="col-span-12 md:col-span-4">
+          <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Stage 2
+            </h2>
+
+            <textarea
+              value={editTextAdminValue}
+              onChange={(e) => setEditTextAdminValue(e.target.value)}
+              placeholder="Enter your text here..."
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleEdit}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div> */}
+
+        {/* <div className="col-span-12 md:col-span-4">
+          <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Note</h2>
 
             <textarea
               disabled
@@ -234,13 +360,13 @@ export default function DetailPage() {
               className="w-full h-40 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
             />
           </div>
-        </div>
+        </div> */}
       </div>
       <div className="grid grid-cols-12 gap-4 my-8">
         {/* First column (8/12) */}
         <div className="col-span-12 md:col-span-8">
           <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
               Stage 2
             </h2>
 
@@ -265,7 +391,7 @@ export default function DetailPage() {
 
         <div className="col-span-12 md:col-span-4">
           <div className="bg-white h-full rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Note</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Note</h2>
 
             <textarea
               disabled

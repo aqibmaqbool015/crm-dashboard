@@ -137,7 +137,7 @@ export default function ProjectDetail() {
             </div>
             <div className="grid md:grid-cols-2 mt-4">
               <div>
-                <div className="h-64 mb-6">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -154,7 +154,7 @@ export default function ProjectDetail() {
                         ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend
+                      {/* <Legend
                         verticalAlign="bottom"
                         height={36}
                         iconType="circle"
@@ -163,7 +163,7 @@ export default function ProjectDetail() {
                             {value}
                           </span>
                         )}
-                      />
+                      /> */}
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
