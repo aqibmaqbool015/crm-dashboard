@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Providers } from "@/lib/store/providers";
 
 export const metadata = {
   title: "CRMS - Customer Relationship Management",
@@ -9,7 +10,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

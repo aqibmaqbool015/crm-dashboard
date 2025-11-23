@@ -2,15 +2,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { addUser } from "@/lib/store/slices/usersSlice";
+import axiosClient from "@/lib/axiosClient";
+import { toast } from "react-toastify";
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "",
+    full_name: "",
     email: "",
     password: "",
-    moduleAssign: "",
+    role: "user",
+    modules: [],
   });
 
   const modules = [
@@ -19,6 +25,10 @@ export default function CreateUserPage() {
     { value: "users", label: "Users" },
     { value: "reports", label: "Reports" },
     { value: "settings", label: "Settings" },
+    { value: "complaints", label: "Complaints" },
+    { value: "trustmark", label: "Trustmark" },
+    { value: "inspections", label: "Inspections" },
+    { value: "chat", label: "Chat" },
   ];
 
   const handleChange = (e) => {
@@ -29,21 +39,49 @@ export default function CreateUserPage() {
     }));
   };
 
+  const handleModuleChange = (moduleValue) => {
+    setFormData((prev) => {
+      const modules = [...prev.modules];
+      if (modules.includes(moduleValue)) {
+        return {
+          ...prev,
+          modules: modules.filter((m) => m !== moduleValue),
+        };
+      } else {
+        return {
+          ...prev,
+          modules: [...modules, moduleValue],
+        };
+      }
+    });
+  };
+
+  // In your create user page - remove the dispatch and just refetch
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      console.log("User Data:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // API call to create user
+      await axiosClient.post("/admin/users", formData);
 
-      // Success message or redirect
-      alert("User created successfully!");
-      router.push("/users");
+      toast.success("User created successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+
+      // Redirect to users page - it will automatically refetch with correct data
+      setTimeout(() => {
+        router.push("/users");
+      }, 1000);
     } catch (error) {
       console.error("Error creating user:", error);
-      alert("Failed to create user. Please try again.");
+      const errorMessage =
+        error.response?.data?.message || "Failed to create user";
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +93,6 @@ export default function CreateUserPage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            
             <h1 className="text-3xl font-bold text-gray-900">
               Create New User
             </h1>
@@ -70,17 +107,17 @@ export default function CreateUserPage() {
               {/* Full Name */}
               <div>
                 <label
-                  htmlFor="fullName"
+                  htmlFor="full_name"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
                   Full Name *
                 </label>
                 <input
                   type="text"
-                  id="fullName"
-                  name="fullName"
+                  id="full_name"
+                  name="full_name"
                   required
-                  value={formData.fullName}
+                  value={formData.full_name}
                   onChange={handleChange}
                   placeholder="Enter full name..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -130,29 +167,54 @@ export default function CreateUserPage() {
                 </p>
               </div>
 
-              {/* Module Assign */}
+              {/* Role */}
               <div>
                 <label
-                  htmlFor="moduleAssign"
+                  htmlFor="role"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Assign Module *
+                  Role *
                 </label>
                 <select
-                  id="moduleAssign"
-                  name="moduleAssign"
+                  id="role"
+                  name="role"
                   required
-                  value={formData.moduleAssign}
+                  value={formData.role}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select a module</option>
-                  {modules.map((module) => (
-                    <option key={module.value} value={module.value}>
-                      {module.label}
-                    </option>
-                  ))}
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
                 </select>
+              </div>
+
+              {/* Modules - Multiple Select */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assign Modules *
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 border border-gray-300 rounded-md">
+                  {modules.map((module) => (
+                    <label
+                      key={module.value}
+                      className="flex items-center space-x-2"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.modules.includes(module.value)}
+                        onChange={() => handleModuleChange(module.value)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {module.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Selected: {formData.modules.length} modules
+                </p>
               </div>
 
               {/* Form Actions */}
@@ -166,7 +228,7 @@ export default function CreateUserPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || formData.modules.length === 0}
                   className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
@@ -200,7 +262,6 @@ export default function CreateUserPage() {
               </div>
             </form>
           </div>
-
         </div>
       </div>
     </Layout>
