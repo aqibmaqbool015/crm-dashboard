@@ -3,56 +3,42 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { authService } from "@/services/authService";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { setCredentials } from "@/lib/store/slices/authSlice";
+import axiosClient from "@/lib/axiosClient";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
-    if (!email || !password) {
-      toast.error("Please fill in all fields", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log("Sending login request...");
-
-      const response = await authService.login({
+      const response = await axiosClient.post("/auth/login", {
         email: email,
         password: password,
       });
 
-      if (response.token) {
-        localStorage.setItem("token", response.token);
-      }
-      if (response.user) {
-        localStorage.setItem("user", JSON.stringify(response.user));
-      }
+      // Use Redux to handle storage
+      dispatch(
+        setCredentials({
+          user: response.data.user,
+          token: response.data.token,
+        })
+      );
 
-      toast.success(response?.message || "Login successfully");
-
+      toast.success(response?.data?.message || "Login successfully");
       setTimeout(() => {
         router.push("/");
       }, 2000);
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Login failed. Please check your credentials.";
-
+      const errorMessage = error.response?.data?.message || "Login failed";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

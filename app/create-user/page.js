@@ -78,10 +78,7 @@ export default function CreateUserPage() {
       console.error("Error creating user:", error);
       const errorMessage =
         error.response?.data?.message || "Failed to create user";
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

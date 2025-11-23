@@ -3,12 +3,16 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import axiosClient from "@/lib/axiosClient";
+import { useAppSelector } from "@/lib/store/hooks"; // Add this import
 
 export default function Header({ setSidebarOpen }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
   const router = useRouter();
+
+  // Get user data from Redux store instead of localStorage
+  const { userInfo, token } = useAppSelector((state) => state.auth);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -24,23 +28,12 @@ export default function Header({ setSidebarOpen }) {
     };
   }, []);
 
-  // Get user data from localStorage
-  const getUserData = () => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("user");
-      return userData ? JSON.parse(userData) : null;
-    }
-    return null;
-  };
-
-  const user = getUserData();
-
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!user) return "U";
+    if (!userInfo) return "U";
 
-    if (user.name) {
-      return user.name
+    if (userInfo.name) {
+      return userInfo.name
         .split(" ")
         .map((n) => n[0])
         .join("")
@@ -48,8 +41,8 @@ export default function Header({ setSidebarOpen }) {
         .slice(0, 2);
     }
 
-    if (user.email) {
-      return user.email[0].toUpperCase();
+    if (userInfo.email) {
+      return userInfo.email[0].toUpperCase();
     }
 
     return "U";
@@ -59,13 +52,14 @@ export default function Header({ setSidebarOpen }) {
     setIsLoggingOut(true);
 
     try {
-      // Call logout API
       await axiosClient.post("/auth/logout");
 
-      // Clear local storage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("authData");
+      // Clear local storage safely
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("authData");
+      }
 
       toast.success("Logged out successfully!", {
         position: "top-right",
@@ -81,9 +75,11 @@ export default function Header({ setSidebarOpen }) {
       console.error("Logout error:", error);
 
       // Even if API fails, clear local storage and redirect
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("authData");
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("authData");
+      }
 
       toast.info("You have been logged out", {
         position: "top-right",
@@ -189,10 +185,10 @@ export default function Header({ setSidebarOpen }) {
                   {/* User Info */}
                   <div className="px-4 py-2 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.name || "User"}
+                      {userInfo?.name || "User"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {user?.email || "user@example.com"}
+                      {userInfo?.email || "user@example.com"}
                     </p>
                   </div>
 
