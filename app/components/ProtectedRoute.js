@@ -1,18 +1,19 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/services/authService";
+import { useAppSelector } from "@/lib/store/hooks";
 
 export default function ProtectedRoute({ children }) {
   const router = useRouter();
+  const { token } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!authService.isAuthenticated()) {
+    if (!token) {
       router.push("/auth/login");
     }
-  }, [router]);
+  }, [token, router]);
 
-  if (!authService.isAuthenticated()) {
+  if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>

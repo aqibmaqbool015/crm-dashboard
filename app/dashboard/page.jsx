@@ -1,14 +1,28 @@
 "use client";
-import ProtectedRoute from '@/app/components/ProtectedRoute';
-import { authService } from '@/services/authService';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/lib/store/hooks";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function DashboardPage() {
-    const user = authService.getCurrentUser();
+    const router = useRouter();
+    const { userInfo } = useAppSelector((state) => state.auth);
 
-    const handleLogout = () => {
-        authService.logout();
-        window.location.href = '/auth/login';
-    };
+    // Remove any direct localStorage access and use Redux instead
+    useEffect(() => {
+        // If no user info in Redux, redirect to login
+        if (!userInfo) {
+            router.push("/auth/login");
+        }
+    }, [userInfo, router]);
+
+    if (!userInfo) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <ProtectedRoute>
@@ -16,9 +30,16 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Dashboard</h1>
                     <div className="flex items-center gap-4">
-                        <span>Welcome, {user?.name || user?.email}</span>
+                        <span>Welcome, {userInfo?.name || userInfo?.email}</span>
                         <button
-                            onClick={handleLogout}
+                            onClick={() => {
+                                // Handle logout through Redux
+                                if (typeof window !== 'undefined') {
+                                    localStorage.removeItem("token");
+                                    localStorage.removeItem("user");
+                                }
+                                router.push("/auth/login");
+                            }}
                             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                         >
                             Logout
