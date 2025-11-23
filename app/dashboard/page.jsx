@@ -2,15 +2,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/lib/store/hooks";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function DashboardPage() {
     const router = useRouter();
     const { userInfo } = useAppSelector((state) => state.auth);
 
-    // Remove any direct localStorage access and use Redux instead
     useEffect(() => {
-        // If no user info in Redux, redirect to login
         if (!userInfo) {
             router.push("/auth/login");
         }
