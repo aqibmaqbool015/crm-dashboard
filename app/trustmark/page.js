@@ -1,42 +1,100 @@
 "use client";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import axiosClient from "@/lib/axiosClient";
+import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
+import {
+  setTrustmarks,
+  setLoading,
+  setError,
+} from "../../lib/store/slices/trustmarkSlice";
 
 export default function TrustmarkPage() {
   const router = useRouter();
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      number: 1,
-      address: "Street 5",
-      info: "info as",
-      date: "27-09-2024",
-      expectDate: "27-10-2024",
-      review: "Good",
-      status: "Pending",
-    },
-    {
-      id: 1,
-      number: 1,
-      address: "Street 5",
-      info: "info as",
-      date: "27-09-2024",
-      expectDate: "27-10-2024",
-      review: "Good",
-      status: "Pending",
-    },
-  ]);
+  const dispatch = useAppDispatch();
+  const { trustmarks, isLoading, pagination } = useAppSelector(
+    (state) => state.trustmark
+  );
 
-  const handleEdit = (userId) => {
-    console.log("Edit user:", userId);
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
-  const handleDelete = (userId) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== userId));
+  // Fetch trustmarks
+  const fetchTrustmarks = async (page = 1) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await axiosClient.get(`/trust-mark-audit?page=${page}`);
+
+      const transformedTrustmarks = response?.data?.data?.map(
+        (item, index) => ({
+          id: item.id,
+          number: (page - 1) * response.data.meta.per_page + index + 1,
+          address: item.address,
+          description: item.description,
+          registered_at: formatDate(item.registered_at),
+          expected_completion_date: formatDate(item.expected_completion_date),
+          review_testing_date: formatDate(item.review_testing_date),
+          status: item.status,
+          assigned_to: item.assigned_to_user?.full_name || "N/A",
+          review_status: item.review_status,
+        })
+      );
+
+      dispatch(
+        setTrustmarks({
+          trustmarks: transformedTrustmarks,
+          pagination: response?.data?.meta,
+        })
+      );
+    } catch (error) {
+      dispatch(setError("Failed to load trustmark audits"));
+      toast.error("Failed to load trustmark audits");
+    } finally {
+      dispatch(setLoading(false));
     }
+  };
+
+  useEffect(() => {
+    fetchTrustmarks();
+  }, []);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.last_page) {
+      fetchTrustmarks(newPage);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
+      assigned: { color: "bg-blue-100 text-blue-800", label: "Assigned" },
+      in_progress: {
+        color: "bg-orange-100 text-orange-800",
+        label: "In Progress",
+      },
+      completed: { color: "bg-green-100 text-green-800", label: "Completed" },
+      cancelled: { color: "bg-red-100 text-red-800", label: "Cancelled" },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+      >
+        {config.label}
+      </span>
+    );
   };
 
   return (
@@ -51,14 +109,14 @@ export default function TrustmarkPage() {
                   Trustmark Audit
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Manage users Trustmark Audit.
+                  Manage Trustmark Audits and their status.
                 </p>
               </div>
               <button
                 onClick={() => router.push("/add-trustmark")}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center"
               >
-                <Plus className="w-5 h-5 text-white mx-1" />
+                <Plus className="w-5 h-5 text-white mr-2" />
                 Add Trustmark
               </button>
             </div>
@@ -66,121 +124,187 @@ export default function TrustmarkPage() {
 
           {/* Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Id
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Address
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Complaint information
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date of complaint
-                    </th>
-
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Expected date of completion
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Review of testing
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.number}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.address}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.info}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {user.date}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {user.expectDate}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {user.review}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {user.status}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="md:hidden">
-              {users.map((user) => (
-                <div key={user.id} className="border-b border-gray-200 p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {user.number}
-                      </h3>
-                      <p className="text-sm text-gray-500">{user.address}</p>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.info}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">{user.date}</span>
-                    <div className="space-x-2">{user.expectDate}</div>
-                    <div className="space-x-2">{user.review}</div>
-                    <div className="space-x-2">{user.status}</div>
-                  </div>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Loading trustmark audits...</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          #
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Address
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Description
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Assigned To
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date Registered
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Expected Completion
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Review Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {trustmarks.map((trustmark) => (
+                        <tr key={trustmark.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {trustmark.number}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                            <div className="line-clamp-2">
+                              {trustmark.address}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                            <div className="line-clamp-2">
+                              {trustmark.description}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {trustmark.assigned_to}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {trustmark.registered_at}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {trustmark.expected_completion_date}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {trustmark.review_testing_date}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getStatusBadge(trustmark.status)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {trustmarks.map((trustmark) => (
+                    <div key={trustmark.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              #{trustmark.number}
+                            </h3>
+                            {getStatusBadge(trustmark.status)}
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            {trustmark.address}
+                          </p>
+                          <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                            {trustmark.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Assigned To:</span>
+                          <span className="text-gray-900 font-medium">
+                            {trustmark.assigned_to}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">
+                            Registered Date:
+                          </span>
+                          <span className="text-gray-900">
+                            {trustmark.registered_at}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">
+                            Expected Completion:
+                          </span>
+                          <span className="text-gray-900">
+                            {trustmark.expected_completion_date}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Review Date:</span>
+                          <span className="text-gray-900">
+                            {trustmark.review_testing_date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* Empty State */}
-            {users.length === 0 && (
+            {trustmarks.length === 0 && !isLoading && (
               <div className="text-center py-12">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                  />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No users
+                <h3 className="text-sm font-medium text-gray-900">
+                  No trustmark audits found
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a new user.
+                  Add a new trustmark audit to get started.
                 </p>
-                <div className="mt-6">
-                  <button
-                    onClick={() => router.push("/users/create")}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    Add User
-                  </button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {trustmarks.length > 0 && (
+              <div className="px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-700">
+                    Showing{" "}
+                    {(pagination.current_page - 1) * pagination.per_page + 1} to{" "}
+                    {Math.min(
+                      pagination.current_page * pagination.per_page,
+                      pagination.total
+                    )}{" "}
+                    of {pagination.total} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() =>
+                        handlePageChange(pagination.current_page - 1)
+                      }
+                      disabled={pagination.current_page === 1}
+                      className="p-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm text-gray-700 min-w-[100px] text-center">
+                      Page {pagination.current_page} of {pagination.last_page}
+                    </span>
+                    <button
+                      onClick={() =>
+                        handlePageChange(pagination.current_page + 1)
+                      }
+                      disabled={
+                        pagination.current_page === pagination.last_page
+                      }
+                      className="p-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

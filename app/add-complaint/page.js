@@ -1,20 +1,26 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import axiosClient from "@/lib/axiosClient";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateComplaintPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     address: "",
-    compliantInformation: "",
-    dateOfComplaint: "",
-    status: "",
-    expectedDateOfCompletion: "",
-    reviewOfTesting: "",
-    testingStatus: "",
-    image: null,
+    description: "",
+    status: "pending",
+    expected_completion_date: "",
+    review_testing_date: "",
+    review_status: "not_started",
+    assigned_to: "",
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,33 +33,50 @@ export default function CreateComplaintPage() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        image: file,
-      }));
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
     }
   };
 
-  const handleRemoveImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: null,
-    }));
-    setImagePreview(null);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add your form submission logic here
-    alert("Compliant created successfully!");
+    setIsSubmitting(true);
+
+    try {
+      const submitData = new FormData();
+
+      // Required fields
+      submitData.append("address", formData.address);
+      submitData.append("description", formData.description);
+      submitData.append("status", formData.status);
+      submitData.append(
+        "expected_completion_date",
+        formData.expected_completion_date
+      );
+      submitData.append("review_testing_date", formData.review_testing_date);
+      submitData.append("review_status", formData.review_status);
+      submitData.append("assigned_to", formData.assigned_to);
+
+      // Optional image
+      if (imageFile) {
+        submitData.append("photo", imageFile);
+      }
+
+      const response = await axiosClient.post("/complaints/store", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success("Complaint created successfully!");
+      router.push("/complaint");
+    } catch (error) {
+      console.error("Error creating complaint:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to create complaint";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -62,8 +85,11 @@ export default function CreateComplaintPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Create Compliant
+              Create Complaint
             </h1>
+            <p className="text-gray-600 mt-1">
+              Add a new complaint to the system.
+            </p>
           </div>
         </div>
       </div>
@@ -73,7 +99,7 @@ export default function CreateComplaintPage() {
           {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address
+              Address *
             </label>
             <input
               type="text"
@@ -86,16 +112,16 @@ export default function CreateComplaintPage() {
             />
           </div>
 
-          {/* Compliant Information */}
+          {/* Complaint Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Compliant Information
+              Complaint Description *
             </label>
             <textarea
-              name="compliantInformation"
-              value={formData.compliantInformation}
+              name="description"
+              value={formData.description}
               onChange={handleInputChange}
-              placeholder="Enter compliant information"
+              placeholder="Enter complaint description"
               rows="4"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
               required
@@ -103,25 +129,10 @@ export default function CreateComplaintPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Date of Complaint */}
+            {/* Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date of Complaint
-              </label>
-              <input
-                type="date"
-                name="dateOfComplaint"
-                value={formData.dateOfComplaint}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                required
-              />
-            </div>
-
-            {/* Status Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                Status *
               </label>
               <select
                 name="status"
@@ -130,126 +141,115 @@ export default function CreateComplaintPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               >
-                <option value="">Select Status</option>
-                <option value="Assigned">Assigned</option>
-                <option value="Pending">Pending</option>
-                <option value="Resolved">Resolved</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
+            </div>
+
+            {/* Assigned To */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Assigned To (User ID) *
+              </label>
+              <input
+                type="number"
+                name="assigned_to"
+                value={formData.assigned_to}
+                onChange={handleInputChange}
+                placeholder="Enter user ID"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Expected Date of Completion */}
+            {/* Expected Completion Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Date of Completion
+                Expected Completion Date *
               </label>
               <input
                 type="date"
-                name="expectedDateOfCompletion"
-                value={formData.expectedDateOfCompletion}
+                name="expected_completion_date"
+                value={formData.expected_completion_date}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
             </div>
 
-            {/* Review of Testing */}
+            {/* Review Testing Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Review of Testing
+                Review Testing Date *
               </label>
               <input
-                type="text"
-                name="reviewOfTesting"
-                value={formData.reviewOfTesting}
+                type="date"
+                name="review_testing_date"
+                value={formData.review_testing_date}
                 onChange={handleInputChange}
-                placeholder="Enter review of testing"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
             </div>
           </div>
 
-          {/* Status (Approved, Rejected) */}
+          {/* Review Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Testing Status
+              Review Status *
             </label>
             <select
-              name="testingStatus"
-              value={formData.testingStatus}
+              name="review_status"
+              value={formData.review_status}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               required
             >
-              <option value="">Select Testing Status</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_review">In Review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
 
-          {/* Upload Button for Image */}
+          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Image
+              Upload Image (Optional)
             </label>
-            <div className="flex items-center gap-4">
-              <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg
-                    className="w-8 h-8 mb-4 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="text-xs text-gray-500">Upload Image</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
-
-              {imagePreview && (
-                <div className="relative">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
           </div>
 
-          {/* Create Compliant Button */}
-          <div className="flex justify-end pt-6">
+          {/* Buttons */}
+          <div className="flex justify-end gap-4 pt-6">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Create Compliant
+              {isSubmitting ? "Creating..." : "Create Complaint"}
             </button>
           </div>
         </form>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }

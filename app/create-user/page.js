@@ -5,7 +5,8 @@ import Layout from "../components/Layout";
 import { useAppDispatch } from "@/lib/store/hooks";
 import { addUser } from "@/lib/store/slices/usersSlice";
 import axiosClient from "@/lib/axiosClient";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -261,6 +262,7 @@ export default function CreateUserPage() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }

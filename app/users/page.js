@@ -11,7 +11,8 @@ import {
   deleteUser,
 } from "@/lib/store/slices/usersSlice";
 import axiosClient from "@/lib/axiosClient";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -214,6 +215,7 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }
