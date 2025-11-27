@@ -1,17 +1,33 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
+import axiosClient from "@/lib/axiosClient";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
+import {
+  addInspection,
+  setSubmitting,
+  setError,
+} from "../../lib/store/slices/insepectionSlice";
 
 export default function AddInspectionPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { isSubmitting } = useAppSelector((state) => state.inspection);
+
   const [formData, setFormData] = useState({
+    project_id: "",
     address: "",
-    toTechnician: "",
-    report: "",
-    compliantBox: "",
-    technicianToInspector: "",
-    expectedDate: "",
-    markedResolved: "",
-    projectCompletionStatus: "",
+    description: "",
+    status: "",
+    report_result: "",
+    issue_field: "",
+    assignment_status: "",
+    expected_completion_date: "",
+    resolved_at: null,
+    assigned_to: "",
   });
 
   const handleInputChange = (e) => {
@@ -22,10 +38,38 @@ export default function AddInspectionPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    alert("Inspection created successfully!");
+    dispatch(setSubmitting(true));
+
+    try {
+      const apiData = {
+        ...formData,
+        project_id: formData.project_id ? parseInt(formData.project_id) : null,
+        assigned_to: formData.assigned_to
+          ? parseInt(formData.assigned_to)
+          : null,
+        resolved_at: formData.resolved_at || null,
+      };
+
+      const response = await axiosClient.post("/c3-reports/store", apiData);
+
+      // Redux mein add karein
+      dispatch(addInspection(response.data.data));
+
+      toast.success("Inspection created successfully!");
+
+      setTimeout(() => {
+        router.push("/inspection");
+      }, 1500);
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to create inspection";
+      dispatch(setError(errorMessage));
+      toast.error(errorMessage);
+    } finally {
+      dispatch(setSubmitting(false));
+    }
   };
 
   return (
@@ -42,6 +86,21 @@ export default function AddInspectionPage() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Project ID */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Project ID
+            </label>
+            <input
+              type="number"
+              name="project_id"
+              value={formData.project_id}
+              onChange={handleInputChange}
+              placeholder="Enter project ID"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+
           {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -58,139 +117,144 @@ export default function AddInspectionPage() {
             />
           </div>
 
-          {/* To Technike (Order/pending order) */}
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              To Technike
-            </label>
-            <select
-              name="toTechnician"
-              value={formData.toTechnician}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="">Select Option</option>
-              <option value="Order">Order</option>
-              <option value="Pending Order">Pending Order</option>
-            </select>
-          </div>
-
-          {/* Report (Pass/Fail) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Report
-            </label>
-            <select
-              name="report"
-              value={formData.report}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="">Select Report</option>
-              <option value="Pass">Pass</option>
-              <option value="Fail">Fail</option>
-            </select>
-          </div>
-
-          {/* Compliant box */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Compliant box
+              Description
             </label>
             <textarea
-              name="compliantBox"
-              value={formData.compliantBox}
+              name="description"
+              value={formData.description}
               onChange={handleInputChange}
-              placeholder="Enter compliant details"
+              placeholder="Enter description"
               rows="4"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
               required
             />
           </div>
 
-          {/* Tecnike to Ispector (Assigned/Pending/Resolved) */}
+          {/* Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tecnike to Ispector
+              Status
             </label>
             <select
-              name="technicianToInspector"
-              value={formData.technicianToInspector}
+              name="status"
+              value={formData.status}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               required
             >
               <option value="">Select Status</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Pending">Pending</option>
-              <option value="Resolved">Resolved</option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
 
-          {/* Expected date */}
+          {/* Report Result */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Expected date
+              Report Result
+            </label>
+            <select
+              name="report_result"
+              value={formData.report_result}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              required
+            >
+              <option value="">Select Report Result</option>
+              <option value="pending_inspection">Pending Inspection</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+              <option value="in_progress">In Progress</option>
+            </select>
+          </div>
+
+          {/* Issue Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Issue Field
+            </label>
+            <select
+              name="issue_field"
+              value={formData.issue_field}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              required
+            >
+              <option value="">Select Issue Field</option>
+              <option value="structural">Structural</option>
+              <option value="electrical">Electrical</option>
+              <option value="plumbing">Plumbing</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+
+          {/* Assignment Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Assignment Status
+            </label>
+            <select
+              name="assignment_status"
+              value={formData.assignment_status}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              required
+            >
+              <option value="">Select Assignment Status</option>
+              <option value="assigned">Assigned</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </div>
+
+          {/* Assigned To (User ID) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Assigned To (User ID)
+            </label>
+            <input
+              type="number"
+              name="assigned_to"
+              value={formData.assigned_to}
+              onChange={handleInputChange}
+              placeholder="Enter user ID"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+
+          {/* Expected Completion Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Expected Completion Date
             </label>
             <input
               type="date"
-              name="expectedDate"
-              value={formData.expectedDate}
+              name="expected_completion_date"
+              value={formData.expected_completion_date}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               required
             />
           </div>
 
-          {/* Marked Resolved */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Marked Resolved
-            </label>
-            <select
-              name="markedResolved"
-              value={formData.markedResolved}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="">Select Option</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </div>
-
-          {/* Project Completion status (Approved/Pending) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project Completion status
-            </label>
-            <select
-              name="projectCompletionStatus"
-              value={formData.projectCompletionStatus}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="">Select Status</option>
-              <option value="Approved">Approved</option>
-              <option value="Pending">Pending</option>
-            </select>
-          </div>
-
           {/* Create Inspection Button */}
           <div className="flex justify-end pt-6">
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-          >
-              Create Inspection
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "Creating..." : "Create Inspection"}
             </button>
           </div>
         </form>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }
