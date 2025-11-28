@@ -2,14 +2,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import {
   setInspections,
   setLoading,
   setError,
+  deleteInspection,
 } from "../../lib/store/slices/insepectionSlice";
 
 export default function InspectionPage() {
@@ -48,6 +50,22 @@ export default function InspectionPage() {
       fetchInspections(newPage);
     }
   };
+
+  const handleEdit = (inspectionId) => {
+    router.push(`/edit-inspection/${inspectionId}`);
+  };
+
+  // const handleDelete = async (inspectionId) => {
+  //   if (confirm("Are you sure you want to delete this inspection?")) {
+  //     try {
+  //       await axiosClient.delete(`/c3-reports/${inspectionId}`);
+  //       dispatch(deleteInspection(inspectionId));
+  //       toast.success("Inspection deleted successfully!");
+  //     } catch (error) {
+  //       toast.error("Failed to delete inspection");
+  //     }
+  //   }
+  // };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -124,6 +142,9 @@ export default function InspectionPage() {
                         <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Expected Date
                         </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -151,6 +172,24 @@ export default function InspectionPage() {
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {inspection.expected_completion_date || "N/A"}
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(inspection.id)}
+                                className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                // onClick={() => handleDelete(inspection.id)}
+                                className="text-red-600 hover:text-red-900 p-1 rounded"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -224,6 +263,7 @@ export default function InspectionPage() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }

@@ -2,14 +2,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import {
   setTrustmarks,
   setLoading,
   setError,
+  deleteTrustmark,
 } from "../../lib/store/slices/trustmarkSlice";
 
 export default function TrustmarkPage() {
@@ -73,6 +75,22 @@ export default function TrustmarkPage() {
       fetchTrustmarks(newPage);
     }
   };
+
+  const handleEdit = (trustmarkId) => {
+    router.push(`/edit-trustmark/${trustmarkId}`);
+  };
+
+  // const handleDelete = async (trustmarkId) => {
+  //   if (confirm("Are you sure you want to delete this trustmark audit?")) {
+  //     try {
+  //       await axiosClient.delete(`/trust-mark-audit/${trustmarkId}`);
+  //       dispatch(deleteTrustmark(trustmarkId));
+  //       toast.success("Trustmark audit deleted successfully!");
+  //     } catch (error) {
+  //       toast.error("Failed to delete trustmark audit");
+  //     }
+  //   }
+  // };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -159,6 +177,9 @@ export default function TrustmarkPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -191,6 +212,24 @@ export default function TrustmarkPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {getStatusBadge(trustmark.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(trustmark.id)}
+                                className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                // onClick={() => handleDelete(trustmark.id)}
+                                className="text-red-600 hover:text-red-900 p-1 rounded"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -248,6 +287,21 @@ export default function TrustmarkPage() {
                             {trustmark.review_testing_date}
                           </span>
                         </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-2 mt-3">
+                        <button
+                          onClick={() => handleEdit(trustmark.id)}
+                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          // onClick={() => handleDelete(trustmark.id)}
+                          className="text-red-600 hover:text-red-900 text-sm font-medium"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -311,6 +365,7 @@ export default function TrustmarkPage() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }

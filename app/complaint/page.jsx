@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,6 +11,8 @@ import {
   setComplaints,
   setLoading,
   setError,
+  setPagination,
+  deleteComplaint,
 } from "@/lib/store/slices/complaintsSlice";
 
 export default function ComplaintPage() {
@@ -19,7 +21,7 @@ export default function ComplaintPage() {
   const { complaints, isLoading } = useAppSelector(
     (state) => state.complaints
   );
-  const [pagination, setPagination] = useState({
+  const [pagination, setLocalPagination] = useState({
     total: 0,
     per_page: 15,
     current_page: 1,
@@ -53,15 +55,18 @@ export default function ComplaintPage() {
         review_testing_date: formatDate(item.review_testing_date),
         status: item.status,
         assigned_to: item.assigned_to_user?.full_name || "N/A",
+        assigned_to_id: item.assigned_to, 
       }));
 
       dispatch(setComplaints(formatted || []));
-      setPagination(res?.data?.meta || {
+      const paginationData = res?.data?.meta || {
         total: 0,
         per_page: 15,
         current_page: 1,
         last_page: 1,
-      });
+      };
+      setLocalPagination(paginationData);
+      dispatch(setPagination(paginationData));
     } catch (error) {
       dispatch(setError("Failed to load complaints"));
       toast.error("Failed to load complaints");
@@ -77,6 +82,22 @@ export default function ComplaintPage() {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
       fetchComplaints(newPage);
+    }
+  };
+
+  const handleEdit = (complaintId) => {
+    router.push(`/edit-complaint/${complaintId}`);
+  };
+
+  const handleDelete = async (complaintId) => {
+    if (confirm("Are you sure you want to delete this complaint?")) {
+      try {
+        await axiosClient.delete(`/complaints/${complaintId}`);
+        dispatch(deleteComplaint(complaintId));
+        toast.success("Complaint deleted successfully!");
+      } catch (error) {
+        toast.error("Failed to delete complaint");
+      }
     }
   };
 
@@ -160,6 +181,9 @@ export default function ComplaintPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
 
@@ -189,6 +213,24 @@ export default function ComplaintPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {getStatusBadge(complaint.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(complaint.id)}
+                                className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(complaint.id)}
+                                className="text-red-600 hover:text-red-900 p-1 rounded"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -234,6 +276,21 @@ export default function ComplaintPage() {
                           <span className="text-gray-500">Review Date:</span>
                           <span className="text-gray-900">{complaint.review_testing_date}</span>
                         </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-2 mt-3">
+                        <button
+                          onClick={() => handleEdit(complaint.id)}
+                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(complaint.id)}
+                          className="text-red-600 hover:text-red-900 text-sm font-medium"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
