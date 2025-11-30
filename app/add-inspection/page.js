@@ -87,7 +87,7 @@ export default function AddInspectionPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Project ID */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Project ID
             </label>
@@ -99,7 +99,7 @@ export default function AddInspectionPage() {
               placeholder="Enter project ID"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Address */}
           <div>
@@ -213,7 +213,7 @@ export default function AddInspectionPage() {
           </div>
 
           {/* Assigned To (User ID) */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Assigned To (User ID)
             </label>
@@ -225,7 +225,7 @@ export default function AddInspectionPage() {
               placeholder="Enter user ID"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Expected Completion Date */}
           <div>

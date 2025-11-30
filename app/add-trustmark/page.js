@@ -122,7 +122,7 @@ export default function CreateTrustMarkPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Project ID (Optional) */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Project ID (Optional)
             </label>
@@ -134,7 +134,7 @@ export default function CreateTrustMarkPage() {
               placeholder="Enter project ID"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Address */}
           <div>
@@ -190,7 +190,7 @@ export default function CreateTrustMarkPage() {
             </div>
 
             {/* Assigned To */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Assigned To (User ID) *
               </label>
@@ -203,7 +203,7 @@ export default function CreateTrustMarkPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -258,7 +258,7 @@ export default function CreateTrustMarkPage() {
           </div>
 
           {/* Upload Button for Image */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Upload Image (Optional)
             </label>
@@ -305,7 +305,7 @@ export default function CreateTrustMarkPage() {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Buttons */}
           <div className="flex justify-end gap-4 pt-6">

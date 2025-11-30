@@ -223,13 +223,13 @@ export default function ComplaintPage() {
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button
+                              {/* <button
                                 onClick={() => handleDelete(complaint.id)}
                                 className="text-red-600 hover:text-red-900 p-1 rounded"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
-                              </button>
+                              </button> */}
                             </div>
                           </td>
                         </tr>
@@ -285,12 +285,12 @@ export default function ComplaintPage() {
                         >
                           Edit
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleDelete(complaint.id)}
                           className="text-red-600 hover:text-red-900 text-sm font-medium"
                         >
                           Delete
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   ))}

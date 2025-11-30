@@ -203,7 +203,7 @@ export default function EditTrustmarkPage() {
               </div>
 
               {/* Photos */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Photos
                 </label>
@@ -218,7 +218,6 @@ export default function EditTrustmarkPage() {
                   Select multiple photos to upload
                 </p>
 
-                {/* Selected photos preview */}
                 {photos.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
@@ -244,8 +243,6 @@ export default function EditTrustmarkPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Existing photos */}
                 {existingPhotos.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
@@ -264,7 +261,7 @@ export default function EditTrustmarkPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Buttons */}
               <div className="flex justify-end space-x-4 pt-6">

@@ -182,13 +182,13 @@ export default function InspectionPage() {
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button
+                              {/* <button
                                 // onClick={() => handleDelete(inspection.id)}
                                 className="text-red-600 hover:text-red-900 p-1 rounded"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
-                              </button>
+                              </button> */}
                             </div>
                           </td>
                         </tr>
