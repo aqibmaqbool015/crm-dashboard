@@ -23,9 +23,41 @@ export default function EditTrustmarkPage() {
     address: "",
     description: "",
     status: "",
+    expected_completion_date: "",
+    review_testing_date: "",
   });
   const [photos, setPhotos] = useState([]);
   const [existingPhotos, setExistingPhotos] = useState([]);
+
+  // Helper function to format date from API to DD/MM/YYYY
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to convert DD/MM/YYYY to ISO string for API
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return null;
+
+    const parts = dateString.split("/");
+    if (parts.length !== 3) return null;
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2], 10);
+
+    const date = new Date(year, month, day);
+    if (isNaN(date.getTime())) return null;
+
+    return date.toISOString();
+  };
 
   // Fetch trustmark data
   useEffect(() => {
@@ -40,6 +72,10 @@ export default function EditTrustmarkPage() {
           address: trustmark.address || "",
           description: trustmark.description || "",
           status: trustmark.status || "",
+          expected_completion_date:
+            formatDateForInput(trustmark.expected_completion_date) || "",
+          review_testing_date:
+            formatDateForInput(trustmark.review_testing_date) || "",
         });
 
         // Agar existing photos hain to set karein
@@ -61,10 +97,45 @@ export default function EditTrustmarkPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // Date input validation for DD/MM/YYYY format
+    if (name.includes("date")) {
+      // Allow only numbers and slashes
+      const cleanedValue = value.replace(/[^\d/]/g, "");
+
+      // Auto-format as user types
+      let formattedValue = cleanedValue;
+      if (
+        cleanedValue.length >= 2 &&
+        cleanedValue.length <= 3 &&
+        !cleanedValue.includes("/")
+      ) {
+        formattedValue = cleanedValue.slice(0, 2) + "/" + cleanedValue.slice(2);
+      } else if (
+        cleanedValue.length >= 5 &&
+        cleanedValue.length <= 6 &&
+        cleanedValue.split("/").length === 2
+      ) {
+        const parts = cleanedValue.split("/");
+        formattedValue =
+          parts[0] + "/" + parts[1].slice(0, 2) + "/" + parts[1].slice(2);
+      }
+
+      // Limit to 10 characters (DD/MM/YYYY)
+      if (formattedValue.length > 10) {
+        formattedValue = formattedValue.slice(0, 10);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -74,6 +145,24 @@ export default function EditTrustmarkPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate date formats
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (
+      formData.expected_completion_date &&
+      !dateRegex.test(formData.expected_completion_date)
+    ) {
+      toast.error("Expected completion date must be in DD/MM/YYYY format");
+      return;
+    }
+    if (
+      formData.review_testing_date &&
+      !dateRegex.test(formData.review_testing_date)
+    ) {
+      toast.error("Review testing date must be in DD/MM/YYYY format");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -83,6 +172,20 @@ export default function EditTrustmarkPage() {
       formDataToSend.append("address", formData.address);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("status", formData.status);
+
+      // Dates add karein
+      if (formData.expected_completion_date) {
+        formDataToSend.append(
+          "expected_completion_date",
+          formatDateForAPI(formData.expected_completion_date)
+        );
+      }
+      if (formData.review_testing_date) {
+        formDataToSend.append(
+          "review_testing_date",
+          formatDateForAPI(formData.review_testing_date)
+        );
+      }
 
       // Photos add karein
       photos.forEach((photo) => {
@@ -181,6 +284,37 @@ export default function EditTrustmarkPage() {
                 />
               </div>
 
+                 {/* Expected Completion Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Expected Completion Date
+                </label>
+                <input
+                  type="text"
+                  name="expected_completion_date"
+                  value={formData.expected_completion_date}
+                  onChange={handleInputChange}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+            
+              </div>
+
+              {/* Review Testing Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Review Testing Date 
+                </label>
+                <input
+                  type="text"
+                  name="review_testing_date"
+                  value={formData.review_testing_date}
+                  onChange={handleInputChange}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -201,6 +335,8 @@ export default function EditTrustmarkPage() {
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
+
+           
 
               {/* Photos */}
               {/* <div>

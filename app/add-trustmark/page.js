@@ -6,12 +6,16 @@ import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { addTrustmark, setSubmitting, setError } from "@/lib/store/slices/trustmarkSlice";
+import {
+  addTrustmark,
+  setSubmitting,
+  setError,
+} from "@/lib/store/slices/trustmarkSlice";
 
 export default function CreateTrustMarkPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
+
   const [formData, setFormData] = useState({
     project_id: "",
     address: "",
@@ -68,7 +72,10 @@ export default function CreateTrustMarkPage() {
       submitData.append("address", formData.address);
       submitData.append("description", formData.description);
       submitData.append("status", formData.status);
-      submitData.append("expected_completion_date", formData.expected_completion_date);
+      submitData.append(
+        "expected_completion_date",
+        formData.expected_completion_date
+      );
       submitData.append("review_testing_date", formData.review_testing_date);
       submitData.append("review_status", formData.review_status);
       submitData.append("assigned_to", formData.assigned_to);
@@ -77,26 +84,30 @@ export default function CreateTrustMarkPage() {
         submitData.append("photos", imageFile);
       }
 
-      const response = await axiosClient.post("/trust-mark-audit/store", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosClient.post(
+        "/trust-mark-audit/store",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.data) {
         // Add trustmark to Redux store
         const newTrustmark = response.data.data;
         dispatch(addTrustmark(newTrustmark));
-        
+
         toast.success("Trustmark audit created successfully!");
         router.push("/trustmark");
       } else {
         throw new Error("Failed to create trustmark audit");
       }
-
     } catch (error) {
       console.error("Error creating trustmark audit:", error);
-      const errorMessage = error.response?.data?.message || "Failed to create trustmark audit";
+      const errorMessage =
+        error.response?.data?.message || "Failed to create trustmark audit";
       dispatch(setError(errorMessage));
       toast.error(errorMessage);
     } finally {
@@ -188,6 +199,24 @@ export default function CreateTrustMarkPage() {
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
+            {/* Review Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Review Status *
+              </label>
+              <select
+                name="review_status"
+                value={formData.review_status}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              >
+                <option value="pending">Pending</option>
+                <option value="in_review">In Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
 
             {/* Assigned To */}
             {/* <div>
@@ -236,25 +265,6 @@ export default function CreateTrustMarkPage() {
                 required
               />
             </div>
-          </div>
-
-          {/* Review Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Review Status *
-            </label>
-            <select
-              name="review_status"
-              value={formData.review_status}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="pending">Pending</option>
-              <option value="in_review">In Review</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
           </div>
 
           {/* Upload Button for Image */}
@@ -306,6 +316,20 @@ export default function CreateTrustMarkPage() {
               )}
             </div>
           </div> */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Complaint Image
+            </label>
+            <input
+              type="text"
+              name="photo_url"
+              value={formData.photo_url}
+              onChange={handleInputChange}
+              placeholder="Enter photo url"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              required
+            />
+          </div>
 
           {/* Buttons */}
           <div className="flex justify-end gap-4 pt-6">

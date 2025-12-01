@@ -21,7 +21,39 @@ export default function EditComplaintPage() {
     description: "",
     status: "",
     assigned_to: "",
+    expected_completion_date: "",
+    review_testing_date: "",
   });
+
+  // Helper function to format date from API to DD/MM/YYYY
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to convert DD/MM/YYYY to ISO string for API
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return null;
+
+    const parts = dateString.split("/");
+    if (parts.length !== 3) return null;
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2], 10);
+
+    const date = new Date(year, month, day);
+    if (isNaN(date.getTime())) return null;
+
+    return date.toISOString();
+  };
 
   // Client-side only initialization
   useEffect(() => {
@@ -44,11 +76,14 @@ export default function EditComplaintPage() {
           description: complaint.description || "",
           status: complaint.status || "",
           assigned_to: complaint.assigned_to || "",
+          expected_completion_date:
+            formatDateForInput(complaint.expected_completion_date) || "",
+          review_testing_date:
+            formatDateForInput(complaint.review_testing_date) || "",
         });
       } catch (error) {
         console.error("Error fetching complaint:", error);
         toast.error("Failed to load complaint data");
-        // router.push("/complaint");
       } finally {
         setIsLoading(false);
       }
@@ -59,10 +94,45 @@ export default function EditComplaintPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // Date input validation for DD/MM/YYYY format
+    if (name.includes("date")) {
+      // Allow only numbers and slashes
+      const cleanedValue = value.replace(/[^\d/]/g, "");
+
+      // Auto-format as user types
+      let formattedValue = cleanedValue;
+      if (
+        cleanedValue.length >= 2 &&
+        cleanedValue.length <= 3 &&
+        !cleanedValue.includes("/")
+      ) {
+        formattedValue = cleanedValue.slice(0, 2) + "/" + cleanedValue.slice(2);
+      } else if (
+        cleanedValue.length >= 5 &&
+        cleanedValue.length <= 6 &&
+        cleanedValue.split("/").length === 2
+      ) {
+        const parts = cleanedValue.split("/");
+        formattedValue =
+          parts[0] + "/" + parts[1].slice(0, 2) + "/" + parts[1].slice(2);
+      }
+
+      // Limit to 10 characters (DD/MM/YYYY)
+      if (formattedValue.length > 10) {
+        formattedValue = formattedValue.slice(0, 10);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -70,6 +140,23 @@ export default function EditComplaintPage() {
 
     if (!complaintId) {
       toast.error("Invalid complaint ID");
+      return;
+    }
+
+    // Validate date formats
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (
+      formData.expected_completion_date &&
+      !dateRegex.test(formData.expected_completion_date)
+    ) {
+      toast.error("Expected completion date must be in DD/MM/YYYY format");
+      return;
+    }
+    if (
+      formData.review_testing_date &&
+      !dateRegex.test(formData.review_testing_date)
+    ) {
+      toast.error("Review testing date must be in DD/MM/YYYY format");
       return;
     }
 
@@ -83,6 +170,10 @@ export default function EditComplaintPage() {
         assigned_to: formData.assigned_to
           ? parseInt(formData.assigned_to)
           : null,
+        expected_completion_date: formatDateForAPI(
+          formData.expected_completion_date
+        ),
+        review_testing_date: formatDateForAPI(formData.review_testing_date),
       };
 
       const response = await axiosClient.put(
@@ -165,6 +256,38 @@ export default function EditComplaintPage() {
                 />
               </div>
 
+               {/* Expected Completion Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Expected Completion Date
+                </label>
+                <input
+                  type="text"
+                  name="expected_completion_date"
+                  value={formData.expected_completion_date}
+                  onChange={handleInputChange}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+               
+              </div>
+
+              {/* Review Testing Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Review Testing Date
+                </label>
+                <input
+                  type="text"
+                  name="review_testing_date"
+                  value={formData.review_testing_date}
+                  onChange={handleInputChange}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              
+              </div>
+
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -185,20 +308,7 @@ export default function EditComplaintPage() {
                 </select>
               </div>
 
-              {/* Assigned To (User ID) */}
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assigned To (User ID)
-                </label>
-                <input
-                  type="number"
-                  name="assigned_to"
-                  value={formData.assigned_to}
-                  onChange={handleInputChange}
-                  placeholder="Enter user ID"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div> */}
+             
 
               {/* Buttons */}
               <div className="flex justify-end space-x-4 pt-6">

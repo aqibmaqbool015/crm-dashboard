@@ -271,20 +271,6 @@ export default function EditInspectionPage() {
                 />
               </div>
 
-              {/* Resolved At (Optional) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resolved At (Optional)
-                </label>
-                <input
-                  type="date"
-                  name="resolved_at"
-                  value={formData.resolved_at || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-
               {/* Buttons */}
               <div className="flex justify-end space-x-4 pt-6">
                 <button

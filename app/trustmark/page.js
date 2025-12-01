@@ -162,9 +162,9 @@ export default function TrustmarkPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Description
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Assigned To
-                        </th>
+                        </th> */}
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date Registered
                         </th>
@@ -198,9 +198,9 @@ export default function TrustmarkPage() {
                               {trustmark.description}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {trustmark.assigned_to}
-                          </td>
+                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {trustmark.registered_at}
                           </td>
@@ -259,12 +259,12 @@ export default function TrustmarkPage() {
                       </div>
 
                       <div className="grid grid-cols-1 gap-2 text-sm">
-                        <div className="flex justify-between">
+                        {/* <div className="flex justify-between">
                           <span className="text-gray-500">Assigned To:</span>
                           <span className="text-gray-900 font-medium">
                             {trustmark.assigned_to}
                           </span>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between">
                           <span className="text-gray-500">
                             Registered Date:

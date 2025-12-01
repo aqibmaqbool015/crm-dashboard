@@ -16,6 +16,7 @@ export default function CreateComplaintPage() {
     status: "pending",
     expected_completion_date: "",
     review_testing_date: "",
+    photo_url: null,
     review_status: "not_started",
     assigned_to: "",
   });
@@ -53,6 +54,7 @@ export default function CreateComplaintPage() {
         formData.expected_completion_date
       );
       submitData.append("review_testing_date", formData.review_testing_date);
+      submitData.append("photo_url", formData.photo_url);
       submitData.append("review_status", formData.review_status);
       submitData.append("assigned_to", formData.assigned_to);
 
@@ -148,6 +150,20 @@ export default function CreateComplaintPage() {
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Expected Completion Date *
+              </label>
+              <input
+                type="date"
+                name="expected_completion_date"
+                value={formData.expected_completion_date}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              />
+            </div>
+
             {/* Assigned To */}
             {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -167,19 +183,6 @@ export default function CreateComplaintPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Expected Completion Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Completion Date *
-              </label>
-              <input
-                type="date"
-                name="expected_completion_date"
-                value={formData.expected_completion_date}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                required
-              />
-            </div>
 
             {/* Review Testing Date */}
             <div>
@@ -195,26 +198,40 @@ export default function CreateComplaintPage() {
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Review Status *
+              </label>
+              <select
+                name="review_status"
+                value={formData.review_status}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              >
+                <option value="not_started">Not Started</option>
+                <option value="in_review">In Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Complaint Image
+            </label>
+            <input
+              type="text"
+              name="photo_url"
+              value={formData.photo_url}
+              onChange={handleInputChange}
+              placeholder="Enter photo url"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              required
+            />
           </div>
 
           {/* Review Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Review Status *
-            </label>
-            <select
-              name="review_status"
-              value={formData.review_status}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              required
-            >
-              <option value="not_started">Not Started</option>
-              <option value="in_review">In Review</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
 
           {/* Image Upload */}
           {/* <div>

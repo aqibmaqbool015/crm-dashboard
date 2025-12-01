@@ -136,9 +136,7 @@ export default function InspectionPage() {
                         <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Assigned To
-                        </th>
+                       
                         <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Expected Date
                         </th>
@@ -166,10 +164,7 @@ export default function InspectionPage() {
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             {getStatusBadge(inspection.status)}
                           </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {inspection.assigned_to_user?.full_name ||
-                              "Unassigned"}
-                          </td>
+                        
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {inspection.expected_completion_date || "N/A"}
                           </td>

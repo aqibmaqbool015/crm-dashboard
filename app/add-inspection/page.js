@@ -25,6 +25,7 @@ export default function AddInspectionPage() {
     report_result: "",
     issue_field: "",
     assignment_status: "",
+    photo_url: null,
     expected_completion_date: "",
     resolved_at: null,
     assigned_to: "",

@@ -166,9 +166,9 @@ export default function ComplaintPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Complaint Information
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Assigned To
-                        </th>
+                        </th> */}
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date of Complaint
                         </th>
@@ -199,9 +199,9 @@ export default function ComplaintPage() {
                           <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                             <div className="line-clamp-2">{complaint.description}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {complaint.assigned_to}
-                          </td>
+                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {complaint.registered_at}
                           </td>
@@ -260,10 +260,10 @@ export default function ComplaintPage() {
                       </div>
 
                       <div className="grid grid-cols-1 gap-2 text-sm">
-                        <div className="flex justify-between">
+                        {/* <div className="flex justify-between">
                           <span className="text-gray-500">Assigned To:</span>
                           <span className="text-gray-900 font-medium">{complaint.assigned_to}</span>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between">
                           <span className="text-gray-500">Complaint Date:</span>
                           <span className="text-gray-900">{complaint.registered_at}</span>
