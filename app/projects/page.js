@@ -1,70 +1,103 @@
 "use client";
 import { useRouter } from "next/navigation";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import Layout from "../components/Layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setProjects,
+  setLoading,
+  setError,
+} from "../../lib/store/slices/projectSlice";
+import axiosClient from "@/lib/axiosClient";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ProjectDetail() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  const project = {
-    id: 1,
-    title: "403 greenlume",
-    type: "Web App",
-    description:
-      "Kofejob is a freelancers marketplace where you can post projects & get instant help.",
-    projectId: "#12145",
-    value: "$03,50,000",
-    dueDate: "15 Oct 2023",
-    totalHours: 100,
-    priority: "High",
-    status: "Active",
-    progress: 2,
-    totalProgress: 4,
-    lastUpdated: "24/10/2023: 10:45 pm",
-    pendingUpdates: ["stages 5", "stages 10", "stages 6 are incomplete"],
-    requestedUpdates: [
-      "stages 4",
-      "stages 7",
-      "stages 8",
-      "stages 9",
-      "stages 11",
-      "stages 12",
-      "stages 14",
-      "stages 15",
-    ],
+  // Get data from Redux store
+  const { projects, loading, meta } = useSelector((state) => state.projects);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch projects on component mount and page change
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        dispatch(setLoading(true));
+        const response = await axiosClient.get(`/all-projects?page=${currentPage}`);
+
+        if (response.data && response.data.data) {
+          dispatch(setProjects(response.data));
+          toast.success(
+            `Loaded ${response.data.data.length} projects successfully!`
+          );
+        } else {
+          toast.warn("No projects data found");
+        }
+      } catch (error) {
+        const errorMsg =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch projects";
+        dispatch(setError(errorMsg));
+        toast.error(errorMsg);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    fetchProjects();
+  }, [dispatch, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= meta?.last_page) {
+      setCurrentPage(page);
+    }
   };
 
-  const pieData = [
-    { name: "Pending", value: 30, color: "#FFD700" },
-    { name: "Active", value: 40, color: "#007BFF" },
-    { name: "Completed", value: 20, color: "#28A745" },
-    { name: "On Hold", value: 10, color: "#DC3545" },
-  ];
-
-  const COLORS = ["#FFD700", "#007BFF", "#28A745", "#DC3545"];
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-sm">
-          <p className="font-medium">{`${payload[0].name} : ${payload[0].value}%`}</p>
-        </div>
-      );
+  // Handle previous page
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
-    return null;
+  };
+
+  // Handle next page
+  const handleNextPage = () => {
+    if (currentPage < meta?.last_page) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    if (!meta?.last_page) return [];
+    
+    const pages = [];
+    const totalPages = meta.last_page;
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   };
 
   const handleCardClick = (projectId) => {
     router.push(`/detail/${projectId}`);
   };
+
   const handleClick = () => {
     router.push("/create-project");
   };
@@ -90,6 +123,70 @@ export default function ProjectDetail() {
       [name]: value,
     }));
   };
+
+  // Helper function to get color based on label
+  const getColorByLabel = (label) => {
+    switch (label) {
+      case "active":
+        return "#007BFF";
+      case "completed":
+        return "#28A745";
+      case "on_hold":
+        return "#DC3545";
+      case "pending":
+        return "#FFD700";
+      default:
+        return "#6B7280";
+    }
+  };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded shadow-sm">
+          <p className="font-medium">{`${payload[0].name} : ${payload[0].value}`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Function to render pie chart for a project
+  const renderPieChart = (project) => {
+    const pieData = project?.chart
+      ? project?.chart.labels.map((label, index) => ({
+          name: label,
+          value: project?.chart.series[index] || 0,
+          color: getColorByLabel(label),
+        }))
+      : [];
+
+    const COLORS = pieData.map((item) => item.color);
+
+    return (
+      <div className="h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={40}
+              outerRadius={60}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index]} />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 p-6">
@@ -98,8 +195,11 @@ export default function ProjectDetail() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  All Projects
+                  All Projects ({meta?.total || 0})
                 </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Showing {projects.length} projects on page {currentPage} of {meta?.last_page || 1}
+                </p>
               </div>
               <button
                 onClick={handleClick}
@@ -107,127 +207,268 @@ export default function ProjectDetail() {
               >
                 Create Projects
               </button>
-              {/* <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    className="pl-3 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div> */}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="md:flex items-center justify-between">
-              <div className="">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Project Name - 403 greenlume
-                </h2>
-              </div>
-              <div className="">
-                <button
-                  onClick={handleCardClick}
-                  type="button"
-                  className="px-6 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-                >
-                  View
-                </button>
-              </div>
+
+          {loading ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+              <p>Loading projects...</p>
             </div>
-            <div className="grid md:grid-cols-2 mt-4">
-              <div>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      {/* <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        iconType="circle"
-                        formatter={(value, entry) => (
-                          <span style={{ color: "#333", fontSize: "14px" }}>
-                            {value}
-                          </span>
-                        )}
-                      /> */}
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div>
-                <div className="my-3">
-                  <select
-                    id="active"
-                    name="active"
-                    value={formData.active}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          ) : projects.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <div
+                    key={project?.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
                   >
-                    <option value="">Select a status</option>
-                    {modules.map((module) => (
-                      <option key={module.value} value={module.value}>
-                        {module.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-md font-semibold text-gray-800 mb-3">
-                    Pending update:
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {project.pendingUpdates.map((update, index) => (
-                      <span
-                        key={index}
-                        className="inline-block px-3 py-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg font-medium"
-                      >
-                        {update}
-                      </span>
-                    ))}
+                    <div className="p-6">
+                      {/* Card Header */}
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 truncate">
+                            {project?.project_name}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {project?.project_type}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleCardClick(project?.id)}
+                          type="button"
+                          className="px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                        >
+                          View
+                        </button>
+                      </div>
+
+                      {/* Project Info */}
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Lead:</span>{" "}
+                          {project?.lead}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1 truncate">
+                          <span className="font-medium">Address:</span>{" "}
+                          {project?.address}
+                        </p>
+                      </div>
+
+                      {/* Project Stats Grid */}
+                      <div className="grid grid-cols-4 gap-2 mb-4">
+                        <div className="bg-blue-50 p-2 rounded text-center">
+                          <p className="text-xs text-blue-700">Total</p>
+                          <p className="text-lg font-bold">
+                            {project?.totals?.total_stages || 0}
+                          </p>
+                        </div>
+                        <div className="bg-green-50 p-2 rounded text-center">
+                          <p className="text-xs text-green-700">Done</p>
+                          <p className="text-lg font-bold">
+                            {project?.totals?.completed || 0}
+                          </p>
+                        </div>
+                        <div className="bg-yellow-50 p-2 rounded text-center">
+                          <p className="text-xs text-yellow-700">Active</p>
+                          <p className="text-lg font-bold">
+                            {project?.totals?.active || 0}
+                          </p>
+                        </div>
+                        <div className="bg-red-50 p-2 rounded text-center">
+                          <p className="text-xs text-red-700">Hold</p>
+                          <p className="text-lg font-bold">
+                            {project?.totals?.on_hold || 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Pie Chart */}
+                      <div className="mb-4">{renderPieChart(project)}</div>
+
+                      {/* Incomplete Stages */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-800">
+                            Pending Updates (
+                            {project?.incomplete_stages?.length || 0})
+                          </h4>
+                          {project?.incomplete_stages &&
+                            project?.incomplete_stages.length > 3 && (
+                              <span className="text-xs text-gray-500">
+                                +{project?.incomplete_stages.length - 3} more
+                              </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {project?.incomplete_stages &&
+                          project?.incomplete_stages.length > 0 ? (
+                            project?.incomplete_stages
+                              .slice(0, 3)
+                              .map((stage, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-block px-2 py-1 bg-yellow-50 border border-yellow-100 text-yellow-700 text-xs rounded font-medium"
+                                >
+                                  {stage.label || `S${stage.stage_id}`}
+                                </span>
+                              ))
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              No pending updates
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Requested Updates */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-800">
+                            Requests ({project?.requested_updates?.length || 0})
+                          </h4>
+                          {project?.requested_updates &&
+                            project?.requested_updates.length > 2 && (
+                              <span className="text-xs text-gray-500">
+                                +{project?.requested_updates.length - 2} more
+                              </span>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                          {project?.requested_updates &&
+                          project?.requested_updates.length > 0 ? (
+                            project?.requested_updates
+                              .slice(0, 2)
+                              .map((update, index) => (
+                                <div
+                                  key={index}
+                                  className="px-2 py-1 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 truncate"
+                                  title={update.note}
+                                >
+                                  {update.note
+                                    ? update.note.substring(0, 40) + "..."
+                                    : `Update ${index + 1}`}
+                                </div>
+                              ))
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              No requests
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              By: {project?.created_by}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              {project?.last_activity_at
+                                ? new Date(
+                                    project?.last_activity_at
+                                  ).toLocaleDateString()
+                                : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {meta && meta.last_page > 1 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * meta.per_page + 1}</span> to{" "}
+                    <span className="font-medium">
+                      {Math.min(currentPage * meta.per_page, meta.total)}
+                    </span> of{" "}
+                    <span className="font-medium">{meta.total}</span> results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                      }`}
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center space-x-1">
+                      {generatePageNumbers().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-1 rounded-md text-sm font-medium ${
+                            currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      
+                      {/* Ellipsis for more pages */}
+                      {meta.last_page > generatePageNumbers()[generatePageNumbers().length - 1] && (
+                        <>
+                          <span className="px-2 text-gray-500">...</span>
+                          <button
+                            onClick={() => handlePageChange(meta.last_page)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium ${
+                              currentPage === meta.last_page
+                                ? "bg-blue-600 text-white"
+                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                            }`}
+                          >
+                            {meta.last_page}
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === meta.last_page}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === meta.last_page
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                      }`}
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
-                <div className="mb-6">
-                  <h3 className="text-md font-semibold text-gray-800 mb-3">
-                    Request update:
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {project.requestedUpdates.map((update, index) => (
-                      <span
-                        key={index}
-                        className="inline-block px-3 py-2 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg font-medium"
-                      >
-                        {update}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+              <p>No projects found. Create your first project!</p>
+              <button
+                onClick={handleClick}
+                className="mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Create New Project
+              </button>
             </div>
-            <div className="flex justify-end">
-              <div className="">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Last updated:</span>{" "}
-                  {project.lastUpdated}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }

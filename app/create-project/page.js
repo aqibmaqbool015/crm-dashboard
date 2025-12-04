@@ -1,16 +1,42 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 import Layout from "../components/Layout";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axiosClient from "@/lib/axiosClient";
+import { addProject } from "../../lib/store/slices/projectSlice"; // Import the addProject action
 
 export default function CreateProjectPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    projectAddress: "",
-    projectLeadBy: "",
-    projectQuality: "good", 
+    project_name: "",
+    project_lead_user: "",
+    project_type: "Solid Wall", // Default project type
+    address: "",
+    status: "pending", // Default status
   });
+
+  // Project type options
+  const projectTypeOptions = [
+    "Solid Wall",
+    "External Wall Insulation",
+    "Solid Plates",
+    "Fitting Walls",
+    "Solid Walls",
+    "Other",
+  ];
+
+  // Status options
+  const statusOptions = [
+    { value: "pending", label: "Pending" },
+    { value: "active", label: "Active" },
+    { value: "on_hold", label: "On Hold" },
+    { value: "completed", label: "Completed" },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,14 +51,56 @@ export default function CreateProjectPage() {
     setIsLoading(true);
 
     try {
-      console.log("Project Data:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Validate form data
+      if (!formData.project_name.trim()) {
+        toast.error("Project name is required");
+        setIsLoading(false);
+        return;
+      }
 
-      alert("Project created successfully!");
-      router.push("/projects");
+      if (!formData.project_lead_user.trim()) {
+        toast.error("Project lead is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!formData.address.trim()) {
+        toast.error("Address is required");
+        setIsLoading(false);
+        return;
+      }
+
+      // API call to create project
+      const response = await axiosClient.post("/projects", formData);
+
+      if (response.data) {
+        // Get the created project data
+        const createdProject = response.data.data;
+
+        // Dispatch to Redux store
+        dispatch(addProject(createdProject));
+
+        // Show success toast
+        toast.success(response.data.msg || "Project created successfully!");
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          router.push("/projects");
+        }, 2000);
+      } else {
+        throw new Error(response.data?.msg || "Failed to create project");
+      }
     } catch (error) {
       console.error("Error creating project:", error);
-      alert("Failed to create project. Please try again.");
+
+      // Show error toast with detailed message
+      const errorMessage =
+        error.response?.data?.msg ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create project. Please try again.";
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +112,25 @@ export default function CreateProjectPage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-        
+            <button
+              onClick={() => router.back()}
+              className="text-blue-600 hover:text-blue-800 mb-4 flex items-center"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Projects
+            </button>
             <h1 className="text-3xl font-bold text-gray-900">
               Create New Project
             </h1>
@@ -56,66 +142,111 @@ export default function CreateProjectPage() {
           {/* Form */}
           <div className="bg-white shadow-sm rounded-lg border border-gray-200">
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Project Address */}
+              {/* Project Name */}
               <div>
                 <label
-                  htmlFor="projectAddress"
+                  htmlFor="project_name"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Project Address *
-                </label>
-                <textarea
-                  id="projectAddress"
-                  name="projectAddress"
-                  rows={3}
-                  required
-                  value={formData.projectAddress}
-                  onChange={handleChange}
-                  placeholder="Enter complete project address..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              {/* Project Lead By */}
-              <div>
-                <label
-                  htmlFor="projectLeadBy"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Project Lead By *
+                  Project Name *
                 </label>
                 <input
                   type="text"
-                  id="projectLeadBy"
-                  name="projectLeadBy"
+                  id="project_name"
+                  name="project_name"
                   required
-                  value={formData.projectLeadBy}
+                  value={formData.project_name}
+                  onChange={handleChange}
+                  placeholder="Enter project name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Project Lead User */}
+              <div>
+                <label
+                  htmlFor="project_lead_user"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Project Lead *
+                </label>
+                <input
+                  type="text"
+                  id="project_lead_user"
+                  name="project_lead_user"
+                  required
+                  value={formData.project_lead_user}
                   onChange={handleChange}
                   placeholder="Enter project lead name..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
-              {/* Project Quality */}
+              {/* Project Type */}
               <div>
                 <label
-                  htmlFor="projectQuality"
+                  htmlFor="project_type"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Project Quality *
+                  Project Type *
                 </label>
                 <select
-                  id="projectQuality"
-                  name="projectQuality"
+                  id="project_type"
+                  name="project_type"
                   required
-                  value={formData.projectQuality}
+                  value={formData.project_type}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="excellent">Excellent</option>
-                  <option value="good">Good</option>
-                  <option value="average">Average</option>
-                  <option value="poor">Poor</option>
+                  {projectTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Project Address *
+                </label>
+                <textarea
+                  id="address"
+                  name="address"
+                  rows={3}
+                  required
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter complete project address..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Status *
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  required
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -164,9 +295,9 @@ export default function CreateProjectPage() {
               </div>
             </form>
           </div>
-
         </div>
       </div>
+      <ToastContainer position="top-right" />
     </Layout>
   );
 }
