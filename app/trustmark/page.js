@@ -2,7 +2,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Trash2,
+  Eye,
+} from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -43,6 +50,7 @@ export default function TrustmarkPage() {
           number: (page - 1) * response.data.meta.per_page + index + 1,
           address: item.address,
           description: item.description,
+          photo: item.photo, // Add photo from API
           registered_at: formatDate(item.registered_at),
           expected_completion_date: formatDate(item.expected_completion_date),
           review_testing_date: formatDate(item.review_testing_date),
@@ -78,6 +86,17 @@ export default function TrustmarkPage() {
 
   const handleEdit = (trustmarkId) => {
     router.push(`/edit-trustmark/${trustmarkId}`);
+  };
+
+  // Handle photo preview in new tab
+  const handlePhotoPreview = (photoUrl, trustmarkId) => {
+    if (!photoUrl) {
+      toast.info("No photo available for this trustmark audit");
+      return;
+    }
+
+    // Simple new tab open - direct image URL
+    window.open(photoUrl, "_blank", "noopener,noreferrer");
   };
 
   // const handleDelete = async (trustmarkId) => {
@@ -149,7 +168,7 @@ export default function TrustmarkPage() {
             ) : (
               <>
                 {/* Desktop Table */}
-                <div className="hidden md:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -162,9 +181,9 @@ export default function TrustmarkPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Description
                         </th>
-                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Assigned To
-                        </th> */}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Photo
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date Registered
                         </th>
@@ -198,9 +217,29 @@ export default function TrustmarkPage() {
                               {trustmark.description}
                             </div>
                           </td>
-                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {trustmark.assigned_to}
-                          </td> */}
+                          {/* Fixed Photo Column */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {trustmark.photo ? (
+                              <button
+                                onClick={() =>
+                                  handlePhotoPreview(
+                                    trustmark.photo,
+                                    trustmark.id
+                                  )
+                                }
+                                className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                                title="View Photo"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Photo
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">
+                                No photo
+                              </span>
+                            )}
+                          </td>
+                          {/* End of Fixed Photo Column */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {trustmark.registered_at}
                           </td>
@@ -235,76 +274,6 @@ export default function TrustmarkPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-
-                {/* Mobile Cards */}
-                <div className="md:hidden divide-y divide-gray-200">
-                  {trustmarks.map((trustmark) => (
-                    <div key={trustmark.id} className="p-4 hover:bg-gray-50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-sm font-semibold text-gray-900">
-                              #{trustmark.number}
-                            </h3>
-                            {getStatusBadge(trustmark.status)}
-                          </div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">
-                            {trustmark.address}
-                          </p>
-                          <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-                            {trustmark.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2 text-sm">
-                        {/* <div className="flex justify-between">
-                          <span className="text-gray-500">Assigned To:</span>
-                          <span className="text-gray-900 font-medium">
-                            {trustmark.assigned_to}
-                          </span>
-                        </div> */}
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">
-                            Registered Date:
-                          </span>
-                          <span className="text-gray-900">
-                            {trustmark.registered_at}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">
-                            Expected Completion:
-                          </span>
-                          <span className="text-gray-900">
-                            {trustmark.expected_completion_date}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Review Date:</span>
-                          <span className="text-gray-900">
-                            {trustmark.review_testing_date}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end space-x-2 mt-3">
-                        <button
-                          onClick={() => handleEdit(trustmark.id)}
-                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          // onClick={() => handleDelete(trustmark.id)}
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </>
             )}

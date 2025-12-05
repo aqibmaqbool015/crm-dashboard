@@ -16,7 +16,7 @@ export default function CreateComplaintPage() {
     status: "pending",
     expected_completion_date: "",
     review_testing_date: "",
-    photo_url: null,
+    photo: null,
     review_status: "not_started",
     assigned_to: "",
   });
@@ -54,7 +54,7 @@ export default function CreateComplaintPage() {
         formData.expected_completion_date
       );
       submitData.append("review_testing_date", formData.review_testing_date);
-      submitData.append("photo_url", formData.photo_url);
+      submitData.append("photo", formData.photo);
       submitData.append("review_status", formData.review_status);
       submitData.append("assigned_to", formData.assigned_to);
 
@@ -222,8 +222,8 @@ export default function CreateComplaintPage() {
             </label>
             <input
               type="text"
-              name="photo_url"
-              value={formData.photo_url}
+              name="photo"
+              value={formData.photo}
               onChange={handleInputChange}
               placeholder="Enter photo url"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"

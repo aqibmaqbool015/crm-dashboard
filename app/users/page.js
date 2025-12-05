@@ -1,14 +1,17 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import {
   setUsers,
   setLoading,
   setError,
   deleteUser,
+  startUpdatingUser,
+  stopUpdatingUser,
+  updateUserModules,
 } from "@/lib/store/slices/usersSlice";
 import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
@@ -17,10 +20,24 @@ import "react-toastify/dist/ReactToastify.css";
 export default function UsersPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { users, pagination, isLoading, error } = useAppSelector(
-    (state) => state.users
-  );
-  console.log("usersusers", users);
+  const { users, pagination, isLoading, error, updatingUserId } =
+    useAppSelector((state) => state.users);
+
+  // State for update modal
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedModules, setSelectedModules] = useState([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Available modules
+  const allModules = [
+    "projects",
+    "complaints",
+    "users",
+    "settings",
+    "reports",
+    "dashboard",
+  ];
 
   // Format date
   const formatDate = (dateString) => {
@@ -43,7 +60,8 @@ export default function UsersPage() {
         number: (page - 1) * response.data.meta.per_page + index + 1,
         name: user?.full_name,
         email: user?.email,
-        moduleName: user?.module_name || "No modules",
+        moduleName: user?.module_name || "",
+        modules: user?.modules || [], // Store modules array if available
         createdAt: user?.created_at,
         formattedDate: formatDate(user?.created_at),
       }));
@@ -66,6 +84,80 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
+  // Handle Edit button click
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+    // Parse existing modules
+    const existingModules = user.moduleName
+      ? user.moduleName.split(",").map((m) => m.trim().toLowerCase())
+      : [];
+    setSelectedModules(existingModules);
+    dispatch(startUpdatingUser(user.id));
+    setIsUpdateModalOpen(true);
+  };
+
+  // Close update modal
+  const closeUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedUser(null);
+    setSelectedModules([]);
+    dispatch(stopUpdatingUser());
+  };
+
+  // Handle module selection
+  const handleModuleToggle = (module) => {
+    setSelectedModules((prev) =>
+      prev.includes(module)
+        ? prev.filter((m) => m !== module)
+        : [...prev, module]
+    );
+  };
+
+  // Update user modules
+  const handleUpdateUser = async () => {
+    if (!selectedUser || selectedModules.length === 0) {
+      toast.error("Please select at least one module");
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const response = await axiosClient.post(
+        `/admin/user/update/${selectedUser.id}`,
+        {
+          modules: selectedModules,
+        }
+      );
+
+      if (response.data) {
+        // Update in Redux store
+        dispatch(
+          updateUserModules({
+            userId: selectedUser.id,
+            modules: selectedModules,
+          })
+        );
+
+        toast.success(
+          response.data.msg || "User modules updated successfully!"
+        );
+        closeUpdateModal();
+      } else {
+        throw new Error(response.data?.msg || "Failed to update user");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      const errorMessage =
+        error.response?.data?.msg ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update user modules";
+      toast.error(errorMessage);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleDelete = async (userId) => {
     if (confirm("Are you sure you want to delete this user?")) {
       try {
@@ -83,9 +175,6 @@ export default function UsersPage() {
       fetchUsers(newPage);
     }
   };
-
-  // Rest of your UI code remains exactly the same...
-  // [Keep all your existing JSX code here - it will work without changes]
 
   return (
     <Layout>
@@ -110,9 +199,8 @@ export default function UsersPage() {
             </div>
           </div>
 
-          {/* Your existing table JSX */}
+          {/* Desktop Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -151,16 +239,19 @@ export default function UsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 max-w-xs truncate">
-                          {user?.moduleName}
+                          {user?.moduleName || 'No Modules'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {user?.formattedDate}
-                        {/*  */}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
-                          Edit
+                        <button
+                          onClick={() => handleEditClick(user)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                        >
+                          <Edit className="w-4 h-4" />
+                        
                         </button>
                         {/* <button
                           onClick={() => handleDelete(user?.id)}
@@ -193,7 +284,7 @@ export default function UsersPage() {
                       handlePageChange(pagination.current_page - 1)
                     }
                     disabled={pagination.current_page === 1}
-                    className="p-2 border rounded disabled:opacity-50"
+                    className="p-2 border rounded disabled:opacity-50 hover:bg-gray-50"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -205,7 +296,7 @@ export default function UsersPage() {
                       handlePageChange(pagination.current_page + 1)
                     }
                     disabled={pagination.current_page === pagination.last_page}
-                    className="p-2 border rounded disabled:opacity-50"
+                    className="p-2 border rounded disabled:opacity-50 hover:bg-gray-50"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -215,6 +306,133 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
+
+      {/* Update User Modal */}
+      {isUpdateModalOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={closeUpdateModal}
+            ></div>
+
+            {/* Modal */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              {/* Modal Header */}
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Update User Modules - {selectedUser.name}
+                  </h3>
+                  <button
+                    onClick={closeUpdateModal}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Module Selection */}
+                <div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Select modules for this user:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allModules.map((module) => (
+                      <div key={module} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`module-${module}`}
+                          checked={selectedModules.includes(module)}
+                          onChange={() => handleModuleToggle(module)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor={`module-${module}`}
+                          className="ml-2 text-sm text-gray-700 capitalize"
+                        >
+                          {module}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedModules.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Selected modules:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedModules.map((module) => (
+                        <span
+                          key={module}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize"
+                        >
+                          {module}
+                          <button
+                            onClick={() => handleModuleToggle(module)}
+                            className="ml-2 text-blue-600 hover:text-blue-800"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleUpdateUser}
+                  disabled={isUpdating || selectedModules.length === 0}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdating ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update User"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeUpdateModal}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer position="top-right" />
     </Layout>
   );

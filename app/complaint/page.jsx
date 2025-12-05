@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Layout from "../components/Layout";
-import { Plus, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Edit, Trash2, Eye } from "lucide-react";
 import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -44,18 +44,20 @@ export default function ComplaintPage() {
       dispatch(setLoading(true));
       const res = await axiosClient.get(`/complaints?page=${page}`);
 
-      // Transform data
+      // Transform data - include photo from API response
       const formatted = res?.data?.data?.map((item, index) => ({
         id: item.id,
         number: (page - 1) * res.data.meta.per_page + index + 1,
         address: item.address,
         description: item.description,
+        photo: item.photo, // Add photo from API
         registered_at: formatDate(item.registered_at),
         expected_completion_date: formatDate(item.expected_completion_date),
         review_testing_date: formatDate(item.review_testing_date),
         status: item.status,
         assigned_to: item.assigned_to_user?.full_name || "N/A",
-        assigned_to_id: item.assigned_to, 
+        assigned_to_id: item.assigned_to,
+        created_by_user: item.created_by_user,
       }));
 
       dispatch(setComplaints(formatted || []));
@@ -78,6 +80,17 @@ export default function ComplaintPage() {
   useEffect(() => {
     fetchComplaints();
   }, []);
+
+  // Handle photo preview in new tab
+  const handlePhotoPreview = (photoUrl, complaintId) => {
+    if (!photoUrl) {
+      toast.info("No photo available for this complaint");
+      return;
+    }
+
+    // Simple new tab open - direct image URL
+    window.open(photoUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
@@ -107,6 +120,7 @@ export default function ComplaintPage() {
       in_progress: { color: "bg-blue-100 text-blue-800", label: "In Progress" },
       completed: { color: "bg-green-100 text-green-800", label: "Completed" },
       cancelled: { color: "bg-red-100 text-red-800", label: "Cancelled" },
+      not_started: { color: "bg-gray-100 text-gray-800", label: "Not Started" },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -153,7 +167,7 @@ export default function ComplaintPage() {
             ) : (
               <>
                 {/* Desktop Table */}
-                <div className="hidden md:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -166,9 +180,9 @@ export default function ComplaintPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Complaint Information
                         </th>
-                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Assigned To
-                        </th> */}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Photo
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date of Complaint
                         </th>
@@ -199,9 +213,20 @@ export default function ComplaintPage() {
                           <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                             <div className="line-clamp-2">{complaint.description}</div>
                           </td>
-                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {complaint.assigned_to}
-                          </td> */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {complaint.photo ? (
+                              <button
+                                onClick={() => handlePhotoPreview(complaint.photo, complaint.id)}
+                                className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                                title="View Photo"
+                              >
+                                <Eye className="w-4 h-4" />
+                              Photo
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">No photo</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {complaint.registered_at}
                           </td>
@@ -236,64 +261,6 @@ export default function ComplaintPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-
-                {/* Mobile Cards */}
-                <div className="md:hidden divide-y divide-gray-200">
-                  {complaints.map((complaint) => (
-                    <div key={complaint.id} className="p-4 hover:bg-gray-50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-sm font-semibold text-gray-900">
-                              #{complaint.number}
-                            </h3>
-                            {getStatusBadge(complaint.status)}
-                          </div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">
-                            {complaint.address}
-                          </p>
-                          <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-                            {complaint.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2 text-sm">
-                        {/* <div className="flex justify-between">
-                          <span className="text-gray-500">Assigned To:</span>
-                          <span className="text-gray-900 font-medium">{complaint.assigned_to}</span>
-                        </div> */}
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Complaint Date:</span>
-                          <span className="text-gray-900">{complaint.registered_at}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Expected Completion:</span>
-                          <span className="text-gray-900">{complaint.expected_completion_date}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Review Date:</span>
-                          <span className="text-gray-900">{complaint.review_testing_date}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end space-x-2 mt-3">
-                        <button
-                          onClick={() => handleEdit(complaint.id)}
-                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                        >
-                          Edit
-                        </button>
-                        {/* <button
-                          onClick={() => handleDelete(complaint.id)}
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        >
-                          Delete
-                        </button> */}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </>
             )}

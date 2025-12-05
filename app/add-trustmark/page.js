@@ -21,6 +21,7 @@ export default function CreateTrustMarkPage() {
     address: "",
     description: "",
     status: "pending",
+    photo: null,
     expected_completion_date: "",
     review_testing_date: "",
     review_status: "pending",
@@ -71,6 +72,7 @@ export default function CreateTrustMarkPage() {
       }
       submitData.append("address", formData.address);
       submitData.append("description", formData.description);
+      submitData.append("photo", formData.photo);
       submitData.append("status", formData.status);
       submitData.append(
         "expected_completion_date",
@@ -322,8 +324,8 @@ export default function CreateTrustMarkPage() {
             </label>
             <input
               type="text"
-              name="photo_url"
-              value={formData.photo_url}
+              name="photo"
+              value={formData.photo}
               onChange={handleInputChange}
               placeholder="Enter photo url"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
