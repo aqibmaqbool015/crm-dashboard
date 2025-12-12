@@ -8,9 +8,23 @@ import {
   Download,
   ListChecks,
   Save,
+  Eye,
+  LoaderIcon,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { setProjectStages, setStageLoading, setStageError } from "../../../lib/store/slices/projectSlice";
+import {
+  setProjectStages,
+  setStageLoading,
+  setStageError,
+  setProjectNotes,
+  setNotesLoading,
+  setNotesError,
+  addProjectNote,
+  setRequestUpdateLoading,
+  setRequestUpdateError,
+  addStageEntry,
+  updateStageEntry
+} from "../../../lib/store/slices/projectSlice";
 import axiosClient from "@/lib/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,13 +36,23 @@ export default function DetailPage() {
   const projectId = params.id;
 
   // Redux state
-  const { projectStages, stageLoading, stageError } = useSelector((state) => state.projects);
+  const {
+    projectStages,
+    stageLoading,
+    stageError,
+    projectNotes,
+    notesLoading,
+    notesError,
+    requestUpdateLoading,
+    requestUpdateError
+  } = useSelector((state) => state.projects);
 
   // Local states
   const [textAreaValues, setTextAreaValues] = useState({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isViewNotesModalOpen, setIsViewNotesModalOpen] = useState(false);
   const [editTextValue, setEditTextValue] = useState("");
   const [editNoteValue, setEditNoteValue] = useState("");
   const [activeStage, setActiveStage] = useState(1);
@@ -104,7 +128,7 @@ export default function DetailPage() {
     return lastEntryIds[stageId] || null;
   };
 
-  // Save or update stage content
+  // API: Save or update stage content
   const saveOrUpdateStageContent = async (stageId, content) => {
     try {
       const stage = projectStages.find(s => s.stage_id === stageId);
@@ -118,62 +142,128 @@ export default function DetailPage() {
 
       if (hasEntry && entryId) {
         // UPDATE - PUT API
-        // Use stage_id (from API response) not project_stage_id
         const response = await axiosClient.put(
           `/projects/${projectId}/stages/${stageId}/entries/${entryId}`,
           { content: content }
         );
 
         if (response.data) {
+          // Update Redux state
+          dispatch(updateStageEntry({
+            stageId,
+            entryId,
+            content
+          }));
+
           toast.success("Stage content updated successfully!");
-          // Update last entry ID if needed
-          setLastEntryIds(prev => ({ ...prev, [stageId]: entryId }));
         }
       } else {
         // CREATE - POST API
-        // Use stage_id (from API response) not project_stage_id
         const response = await axiosClient.post(
           `/projects/${projectId}/stages/${stageId}/entries`,
           {
             content: content
-            // user_id backend se automatically handle ho raha hoga
           }
         );
 
         if (response.data) {
-          toast.success("Stage content saved successfully!");
+          // Add to Redux state
+          dispatch(addStageEntry({
+            stageId,
+            entry: response.data
+          }));
+
           // Store the new entry ID
-          if (response.data.id) {
-            setLastEntryIds(prev => ({ ...prev, [stageId]: response.data.id }));
-          }
+          setLastEntryIds(prev => ({ ...prev, [stageId]: response.data.id }));
+
+          toast.success("Stage content saved successfully!");
         }
       }
-
-      // Refresh stages data after save/update
-      setTimeout(() => {
-        const fetchProjectStages = async () => {
-          const response = await axiosClient.get(`/projects/${projectId}/stages`);
-          if (response.data && response.data.stages) {
-            dispatch(setProjectStages(response.data));
-
-            // Update entry IDs after refresh
-            const newEntryIds = {};
-            response.data.stages.forEach(stage => {
-              if (stage.stage_entries && stage.stage_entries.length > 0) {
-                const latestEntry = stage.stage_entries[stage.stage_entries.length - 1];
-                newEntryIds[stage.stage_id] = latestEntry.id;
-              }
-            });
-            setLastEntryIds(prev => ({ ...prev, ...newEntryIds }));
-          }
-        };
-        fetchProjectStages();
-      }, 500);
 
     } catch (error) {
       console.error("API Error Details:", error);
       const errorMsg = error.response?.data?.message || error.message || "Failed to save/update content";
       toast.error(errorMsg);
+    }
+  };
+
+  // API: Request Update
+  const handleRequestUpdate = async (stageId) => {
+    try {
+      dispatch(setRequestUpdateLoading(true));
+
+      const response = await axiosClient.post(
+        `/project/${projectId}/stage/${stageId}/request-update`,
+        {
+          user_id: 2 // Replace with actual user ID from auth
+        }
+      );
+
+      if (response.data) {
+        toast.success("Update request sent successfully!");
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || "Failed to send update request";
+      dispatch(setRequestUpdateError(errorMsg));
+      toast.error(errorMsg);
+    } finally {
+      dispatch(setRequestUpdateLoading(false));
+    }
+  };
+
+  // API: Add Note
+  const handleAddNote = async () => {
+    if (!editNoteValue.trim()) {
+      toast.warning("Please enter a note before saving");
+      return;
+    }
+
+    try {
+      dispatch(setNotesLoading(true));
+
+      const response = await axiosClient.post(
+        `/projects/${projectId}/notes`,
+        {
+          meta: {
+            notes: editNoteValue
+          }
+        }
+      );
+
+      if (response.data) {
+        // Add to Redux state
+        dispatch(addProjectNote(response.data));
+
+        toast.success("Note added successfully!");
+        setEditNoteValue("");
+        setIsNoteModalOpen(false);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || "Failed to add note";
+      dispatch(setNotesError(errorMsg));
+      toast.error(errorMsg);
+    } finally {
+      dispatch(setNotesLoading(false));
+    }
+  };
+
+  // API: Fetch Notes
+  const fetchProjectNotes = async () => {
+    try {
+      dispatch(setNotesLoading(true));
+
+      const response = await axiosClient.get(`/projects/${projectId}/notes`);
+
+      if (response.data) {
+        dispatch(setProjectNotes(response.data));
+        setIsViewNotesModalOpen(true);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || "Failed to fetch notes";
+      dispatch(setNotesError(errorMsg));
+      toast.error(errorMsg);
+    } finally {
+      dispatch(setNotesLoading(false));
     }
   };
 
@@ -195,12 +285,12 @@ export default function DetailPage() {
     setIsApproveModalOpen(true);
   };
 
-  const handleRequestedUpdate = () => {
-    console.log("Requested Update button clicked");
-  };
-
   const handleNote = () => {
     setIsNoteModalOpen(true);
+  };
+
+  const handleViewNotes = () => {
+    fetchProjectNotes();
   };
 
   const handleUpdate = () => {
@@ -216,8 +306,7 @@ export default function DetailPage() {
   };
 
   const handleUpdateNote = () => {
-    // Handle note update logic
-    setIsNoteModalOpen(false);
+    handleAddNote();
   };
 
   const handleCloseModalNote = () => {
@@ -231,6 +320,11 @@ export default function DetailPage() {
 
   const handleCloseNoteModal = () => {
     setIsNoteModalOpen(false);
+    setEditNoteValue("");
+  };
+
+  const handleCloseViewNotesModal = () => {
+    setIsViewNotesModalOpen(false);
   };
 
   // Function to get stage entries for table
@@ -245,6 +339,19 @@ export default function DetailPage() {
       status: "Pending",
       created_at: entry.created_at
     }));
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (stageLoading) {
@@ -288,10 +395,10 @@ export default function DetailPage() {
 
       <div className="my-3">
         <button
-          onClick={handleNote}
+          onClick={handleViewNotes}
           className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mx-3"
         >
-          Add Note
+          View Note
         </button>
       </div>
 
@@ -352,15 +459,16 @@ export default function DetailPage() {
                     <AudioWaveformIcon />
                   </button>
                   <button
-                    onClick={() => {
-                      setEditingStageId(stage.stage_id);
-                      setEditTextValue(textAreaValues[stage.stage_id] || '');
-                      setIsEditModalOpen(true);
-                    }}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                    title="Edit"
+                    onClick={() => handleRequestUpdate(stage.stage_id)}
+                    disabled={requestUpdateLoading}
+                    className={`px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors ${requestUpdateLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title="Request Update"
                   >
-                    <AudioWaveform />
+                    {requestUpdateLoading ? (
+                      <span className="text-xs"><LoaderIcon /> </span>
+                    ) : (
+                      <AudioWaveform />
+                    )}
                   </button>
 
                   {/* Conditional Save/Update Button */}
@@ -388,41 +496,6 @@ export default function DetailPage() {
         })}
       </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-4">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-800">
-                Edit {projectStages.find(s => s.stage_id === editingStageId)?.stage_name || 'Stage'}
-              </h3>
-            </div>
-            <div className="p-6">
-              <textarea
-                value={editTextValue}
-                onChange={(e) => setEditTextValue(e.target.value)}
-                placeholder="Edit your text here..."
-                className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
-              />
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={handleCloseModalNote}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Update
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Note Modal */}
       {isNoteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -436,22 +509,132 @@ export default function DetailPage() {
                 onChange={(e) => setEditNoteValue(e.target.value)}
                 placeholder="Add your note here..."
                 className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none shadow-none"
+                disabled={notesLoading}
               />
+              {notesError && (
+                <p className="text-red-500 text-sm mt-2">{notesError}</p>
+              )}
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
               <button
                 onClick={handleCloseNoteModal}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                disabled={notesLoading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateNote}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                disabled={notesLoading}
               >
-                Save
+                {notesLoading ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Notes Modal */}
+      {isViewNotesModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-gray-800">Project Notes</h3>
+                <button
+                  onClick={handleCloseViewNotesModal}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {notesLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-lg">Loading notes...</div>
+                </div>
+              ) : notesError ? (
+                <div className="text-red-500 text-center py-8">{notesError}</div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Check if projectNotes is an array */}
+                  {Array.isArray(projectNotes) && projectNotes.length > 0 ? (
+                    projectNotes.map((note, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-medium text-gray-800">
+                            {note.user_name || `User ${note.user_id}` || 'Unknown User'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {formatDate(note.created_at || note.date || note.updated_at)}
+                          </div>
+                        </div>
+                        <div className="text-gray-700 whitespace-pre-line">
+                          {note.meta?.notes || note.content || note.note || 'No content'}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    // Check if projectNotes is an object with data property
+                    projectNotes?.data && Array.isArray(projectNotes.data) ? (
+                      projectNotes.data.map((note, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="font-medium text-gray-800">
+                              {note.user_name || `User ${note.user_id}` || 'Unknown User'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {formatDate(note.created_at || note.date || note.updated_at)}
+                            </div>
+                          </div>
+                          <div className="text-gray-700 whitespace-pre-line">
+                            {note.meta?.notes || note.content || note.note || 'No content'}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      // Check if projectNotes is an object with notes property
+                      projectNotes?.notes && Array.isArray(projectNotes.notes) ? (
+                        projectNotes.notes.map((note, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="font-medium text-gray-800">
+                                {note.user_name || `User ${note.user_id}` || 'Unknown User'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {formatDate(note.created_at || note.date || note.updated_at)}
+                              </div>
+                            </div>
+                            <div className="text-gray-700 whitespace-pre-line">
+                              {note.meta?.notes || note.content || note.note || 'No content'}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        // Fallback if no notes found
+                        <div className="text-gray-500 text-center py-8">
+                          {projectNotes ? 'No notes found or invalid data format' : 'No notes available'}
+                        </div>
+                      )
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+
+         
           </div>
         </div>
       )}
