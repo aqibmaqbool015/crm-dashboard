@@ -312,7 +312,7 @@ export default function ProjectDetail() {
                       <div className="mb-4">{renderPieChart(project)}</div>
 
                       {/* Incomplete Stages */}
-                      <div className="mb-4">
+                      {/* <div className="mb-4">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="text-sm font-semibold text-gray-800">
                             Pending Updates (
@@ -344,7 +344,7 @@ export default function ProjectDetail() {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Requested Updates */}
                       <div className="mb-4">
@@ -372,7 +372,7 @@ export default function ProjectDetail() {
                                 >
                                   {update.note
                                     ? update.note.substring(0, 40) + "..."
-                                    : `Update ${index + 1}`}
+                                    : `Stage ${index + 1}`}
                                 </div>
                               ))
                           ) : (

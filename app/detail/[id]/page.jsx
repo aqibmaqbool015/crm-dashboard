@@ -433,11 +433,7 @@ export default function DetailPage() {
                     }`}>
                     {stage.status?.charAt(0).toUpperCase() + stage.status?.slice(1) || 'Pending'}
                   </span>
-                  {stage.entries_count > 0 && (
-                    <span className="ml-2 text-xs text-gray-500">
-                      {stage.entries_count} entries
-                    </span>
-                  )}
+                
                 </div>
 
                 {/* Buttons Container */}
@@ -448,13 +444,14 @@ export default function DetailPage() {
                       handleApproved();
                     }}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    title="Approve"
+                    title="Activity"
+                   
                   >
                     <ListChecks />
                   </button>
                   <button
                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    title="Audio"
+                    title="Approved"
                   >
                     <AudioWaveformIcon />
                   </button>

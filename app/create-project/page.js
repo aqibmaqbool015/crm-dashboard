@@ -22,12 +22,11 @@ export default function CreateProjectPage() {
 
   // Project type options
   const projectTypeOptions = [
-    "Solid Wall",
+    "Boiler Installation",
     "External Wall Insulation",
-    "Solid Plates",
-    "Fitting Walls",
-    "Solid Walls",
-    "Other",
+    "Heating Control",
+    "Loft Insulation",
+    "Internal Wall Insulation",
   ];
 
   // Status options
