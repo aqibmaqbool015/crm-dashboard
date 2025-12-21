@@ -24,18 +24,31 @@ export default function LoginPage() {
         password: password,
       });
 
-      // Use Redux to handle storage
-      dispatch(
-        setCredentials({
-          user: response.data.user,
-          token: response.data.token,
-        })
-      );
+      // Check if response has user
+      if (response.data && response.data.user) {
+        // Add role based on is_admin
+        const userWithRole = {
+          ...response.data.user,
+          role: response.data.user.is_admin ? 'admin' : 'user'
+        };
 
-      toast.success(response?.data?.message || "Login successfully");
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
+        // Use Redux to handle storage
+        dispatch(
+          setCredentials({
+            user: userWithRole,
+            token: response.data.token,
+          })
+        );
+
+        toast.success(response?.data?.message || "Login successfully");
+        
+        // Redirect after delay
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      } else {
+        toast.error("Invalid response from server");
+      }
     } catch (error) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";

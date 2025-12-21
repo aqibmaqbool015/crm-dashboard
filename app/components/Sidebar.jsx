@@ -2,11 +2,16 @@
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, File, Settings, MessageSquare, Projector, User, InspectIcon, Activity, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
+  
+  // Get user from Redux store
+  const { userInfo } = useSelector((state) => state.auth);
 
-  const menuItems = [
+  // All menu items
+  const allMenuItems = [
     { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
     { name: "All Projects", icon: <Projector />, path: "/projects" },
     { name: "Users", icon: <User />, path: "/users" },
@@ -17,6 +22,28 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     { name: "Activity Screen", icon: <Activity />, path: "/activity" },
     { name: "Chat", icon: <MessageSquare />, path: "/chat" },
   ];
+
+  // Only C3 Inspection for non-admin users
+  const userMenuItems = [
+    { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection" },
+  ];
+
+  // Determine which menu items to show
+  const getMenuItems = () => {
+    if (!userInfo) {
+      return userMenuItems; // Default to minimal menu
+    }
+    
+    // Check if user is admin (is_admin = true)
+    if (userInfo.is_admin === true || userInfo.role === 'admin') {
+      return allMenuItems;
+    }
+    
+    // For non-admin users
+    return userMenuItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <>
@@ -35,7 +62,15 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
       `}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">CRMS</h1>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">CRMS</h1>
+            {userInfo && (
+              <p className="text-xs text-gray-500 mt-1">
+                {userInfo.full_name || userInfo.email}
+                {userInfo.is_admin && <span className="ml-1">(Admin)</span>}
+              </p>
+            )}
+          </div>
         </div>
 
         <nav className="mt-6">

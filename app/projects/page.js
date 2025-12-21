@@ -26,7 +26,9 @@ export default function ProjectDetail() {
     const fetchProjects = async () => {
       try {
         dispatch(setLoading(true));
-        const response = await axiosClient.get(`/all-projects?page=${currentPage}`);
+        const response = await axiosClient.get(
+          `/all-projects?page=${currentPage}`
+        );
 
         if (response.data && response.data.data) {
           dispatch(setProjects(response.data));
@@ -58,7 +60,6 @@ export default function ProjectDetail() {
     }
   };
 
-  // Handle previous page
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -75,22 +76,22 @@ export default function ProjectDetail() {
   // Generate page numbers for pagination
   const generatePageNumbers = () => {
     if (!meta?.last_page) return [];
-    
+
     const pages = [];
     const totalPages = meta.last_page;
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   };
 
@@ -198,7 +199,8 @@ export default function ProjectDetail() {
                   All Projects ({meta?.total || 0})
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  Showing {projects.length} projects on page {currentPage} of {meta?.last_page || 1}
+                  Showing {projects.length} projects on page {currentPage} of{" "}
+                  {meta?.last_page || 1}
                 </p>
               </div>
               <button
@@ -224,22 +226,24 @@ export default function ProjectDetail() {
                   >
                     <div className="p-6">
                       {/* Card Header */}
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 truncate">
-                            {project?.project_name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {project?.project_type}
-                          </p>
+                      <div className="mb-4">
+                        <div className="grid grid-cols-[1fr_80px] gap-3 items-start">
+                          <div>
+                            <h3 className="text-md font-bold text-gray-900 break-words">
+                              {project?.project_name}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1 break-words">
+                              {project?.project_type}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleCardClick(project?.id)}
+                            type="button"
+                            className="w-[80px] px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                          >
+                            View
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleCardClick(project?.id)}
-                          type="button"
-                          className="px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                        >
-                          View
-                        </button>
                       </div>
 
                       {/* Project Info */}
@@ -247,10 +251,6 @@ export default function ProjectDetail() {
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Lead:</span>{" "}
                           {project?.lead}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1 truncate">
-                          <span className="font-medium">Address:</span>{" "}
-                          {project?.address}
                         </p>
                       </div>
 
@@ -385,11 +385,15 @@ export default function ProjectDetail() {
               {meta && meta.last_page > 1 && (
                 <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(currentPage - 1) * meta.per_page + 1}</span> to{" "}
+                    Showing{" "}
+                    <span className="font-medium">
+                      {(currentPage - 1) * meta.per_page + 1}
+                    </span>{" "}
+                    to{" "}
                     <span className="font-medium">
                       {Math.min(currentPage * meta.per_page, meta.total)}
-                    </span> of{" "}
-                    <span className="font-medium">{meta.total}</span> results
+                    </span>{" "}
+                    of <span className="font-medium">{meta.total}</span> results
                   </div>
                   <div className="flex items-center space-x-2">
                     {/* Previous Button */}
@@ -420,9 +424,12 @@ export default function ProjectDetail() {
                           {page}
                         </button>
                       ))}
-                      
+
                       {/* Ellipsis for more pages */}
-                      {meta.last_page > generatePageNumbers()[generatePageNumbers().length - 1] && (
+                      {meta.last_page >
+                        generatePageNumbers()[
+                          generatePageNumbers().length - 1
+                        ] && (
                         <>
                           <span className="px-2 text-gray-500">...</span>
                           <button
