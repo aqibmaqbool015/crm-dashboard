@@ -154,15 +154,41 @@ export default function ProjectDetail() {
 
   // Function to render pie chart for a project
   const renderPieChart = (project) => {
-    const pieData = project?.chart
-      ? project?.chart.labels.map((label, index) => ({
-          name: label,
-          value: project?.chart.series[index] || 0,
-          color: getColorByLabel(label),
-        }))
-      : [];
+    // Create pie chart data from totals object
+    const totals = project?.totals || {};
+    const pieData = [
+      {
+        name: "Completed",
+        value: totals.completed || 0,
+        color: getColorByLabel("completed"),
+      },
+      {
+        name: "Active",
+        value: totals.active || 0,
+        color: getColorByLabel("active"),
+      },
+      {
+        name: "Pending",
+        value: totals.pending || 0,
+        color: getColorByLabel("pending"),
+      },
+      {
+        name: "On Hold",
+        value: totals.on_hold || 0,
+        color: getColorByLabel("on_hold"),
+      },
+    ].filter((item) => item.value > 0); // Only show segments with values > 0
 
     const COLORS = pieData.map((item) => item.color);
+
+    // If no data to display, show a message
+    if (pieData.length === 0) {
+      return (
+        <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+          No data available
+        </div>
+      );
+    }
 
     return (
       <div className="h-48">
