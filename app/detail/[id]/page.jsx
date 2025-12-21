@@ -47,6 +47,7 @@ export default function DetailPage() {
     requestUpdateError
   } = useSelector((state) => state.projects);
 
+
   // Local states
   const [textAreaValues, setTextAreaValues] = useState({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -75,10 +76,22 @@ export default function DetailPage() {
 
           response.data.stages.forEach(stage => {
             if (stage.stage_entries && stage.stage_entries.length > 0) {
-              // Get latest entry content
-              const latestEntry = stage.stage_entries[stage.stage_entries.length - 1];
-              initialValues[stage.stage_id] = latestEntry.content || '';
-              entryIds[stage.stage_id] = latestEntry.id;
+              // Get the latest approved entry or admin entry for textarea
+              // Admin entries are those that are approved (approved: 1) or created by admin
+              const approvedOrAdminEntry = stage.stage_entries
+                .filter(entry => {
+                  // Get approved entries (approved: 1) or entries that might be admin entries
+                  return entry.approved === 1 || entry.approved === true;
+                })
+                .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0];
+              
+              if (approvedOrAdminEntry) {
+                initialValues[stage.stage_id] = approvedOrAdminEntry.content || '';
+                entryIds[stage.stage_id] = approvedOrAdminEntry.id;
+              } else {
+                initialValues[stage.stage_id] = '';
+                entryIds[stage.stage_id] = null;
+              }
             } else {
               initialValues[stage.stage_id] = '';
               entryIds[stage.stage_id] = null;
@@ -281,6 +294,7 @@ export default function DetailPage() {
     setIsEditModalOpen(true);
   };
 
+
   const handleApproved = () => {
     setIsApproveModalOpen(true);
   };
@@ -327,16 +341,129 @@ export default function DetailPage() {
     setIsViewNotesModalOpen(false);
   };
 
-  // Function to get stage entries for table
+  // Handle approve item
+  const handleApproveItem = async (entryId) => {
+    try {
+      // Find the entry to get stage_id
+      let targetStage = null;
+      let targetEntry = null;
+      
+      for (const stage of projectStages) {
+        const entry = stage.stage_entries?.find(e => e.id === entryId);
+        if (entry) {
+          targetStage = stage;
+          targetEntry = entry;
+          break;
+        }
+      }
+
+      if (!targetStage || !targetEntry) {
+        toast.error("Entry not found");
+        return;
+      }
+
+      // Call API to approve the entry
+      // Endpoint: /projects/{projectId}/stages/{stageId}/entries/{entryId}/approve
+      const response = await axiosClient.post(
+        `/projects/${projectId}/stages/${targetStage.stage_id}/entries/${entryId}/approve`
+      );
+
+      if (response.data) {
+        // Get existing admin text for this stage
+        const existingAdminText = textAreaValues[targetStage.stage_id] || '';
+        const approvedText = targetEntry.content || '';
+        
+        // Concatenate approved text with existing admin text
+        const newContent = existingAdminText 
+          ? `${existingAdminText}\n\n${approvedText}`
+          : approvedText;
+
+        // Update the stage content with concatenated text
+        await saveOrUpdateStageContent(targetStage.stage_id, newContent);
+
+        // Update textAreaValues immediately
+        setTextAreaValues(prev => ({
+          ...prev,
+          [targetStage.stage_id]: newContent
+        }));
+
+        // Refresh project stages to update the entry status
+        const refreshResponse = await axiosClient.get(`/projects/${projectId}/stages`);
+        if (refreshResponse.data && refreshResponse.data.stages) {
+          dispatch(setProjectStages(refreshResponse.data));
+          
+          // Update lastEntryIds if needed
+          const updatedStage = refreshResponse.data.stages.find(s => s.stage_id === targetStage.stage_id);
+          if (updatedStage?.stage_entries?.length > 0) {
+            const latestEntry = updatedStage.stage_entries
+              .filter(e => e.approved === 1)
+              .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0];
+            if (latestEntry) {
+              setLastEntryIds(prev => ({ ...prev, [targetStage.stage_id]: latestEntry.id }));
+            }
+          }
+        }
+
+        toast.success("Entry approved and added to stage content!");
+      }
+    } catch (error) {
+      console.error("Approve error:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Failed to approve entry";
+      toast.error(errorMsg);
+    }
+  };
+
+  // Handle reject item
+  const handleRejectItem = async (entryId) => {
+    try {
+      // Find the entry to get stage_id
+      let targetStage = null;
+      
+      for (const stage of projectStages) {
+        const entry = stage.stage_entries?.find(e => e.id === entryId);
+        if (entry) {
+          targetStage = stage;
+          break;
+        }
+      }
+
+      if (!targetStage) {
+        toast.error("Entry not found");
+        return;
+      }
+
+      // Call API to reject the entry
+      // Endpoint: /projects/{projectId}/stages/{stageId}/entries/{entryId}/reject
+      const response = await axiosClient.post(
+        `/projects/${projectId}/stages/${targetStage.stage_id}/entries/${entryId}/reject`
+      );
+
+      if (response.data) {
+        // Refresh project stages to update the entry status
+        const refreshResponse = await axiosClient.get(`/projects/${projectId}/stages`);
+        if (refreshResponse.data && refreshResponse.data.stages) {
+          dispatch(setProjectStages(refreshResponse.data));
+        }
+
+        toast.success("Entry rejected!");
+      }
+    } catch (error) {
+      console.error("Reject error:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Failed to reject entry";
+      toast.error(errorMsg);
+    }
+  };
+
+  // Function to get stage entries for table - only unapproved user entries
   const getStageEntriesForTable = (stage) => {
     if (!stage.stage_entries || stage.stage_entries.length === 0) return [];
 
     return stage.stage_entries.map((entry, index) => ({
       id: entry.id || index,
       stage: stage.stage_id,
-      name: `User ${entry.user_id}`,
+      name: entry.user_name || `User ${entry.user_id}`,
       text: entry.content,
-      status: "Pending",
+      status: entry.approved === 1 ? "Approved" : entry.approved === 2 ? "Rejected" : "Pending",
       created_at: entry.created_at
     }));
   };
