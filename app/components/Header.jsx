@@ -3,13 +3,15 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import axiosClient from "@/lib/axiosClient";
-import { useAppSelector } from "@/lib/store/hooks"; // Add this import
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
+import { logout } from "@/lib/store/slices/authSlice";
 
 export default function Header({ setSidebarOpen }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   // Get user data from Redux store instead of localStorage
   const { userInfo, token } = useAppSelector((state) => state.auth);
@@ -54,12 +56,8 @@ export default function Header({ setSidebarOpen }) {
     try {
       await axiosClient.post("/auth/logout");
 
-      // Clear local storage safely
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("authData");
-      }
+      // Clear Redux state (this also clears localStorage)
+      dispatch(logout());
 
       toast.success("Logged out successfully!", {
         position: "top-right",
@@ -74,12 +72,8 @@ export default function Header({ setSidebarOpen }) {
     } catch (error) {
       console.error("Logout error:", error);
 
-      // Even if API fails, clear local storage and redirect
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("authData");
-      }
+      // Even if API fails, clear Redux state and redirect
+      dispatch(logout());
 
       toast.info("You have been logged out", {
         position: "top-right",

@@ -22,14 +22,13 @@ export default function CreateUserPage() {
 
   const modules = [
     { value: "dashboard", label: "Dashboard" },
-    { value: "projects", label: "Projects" },
+    { value: "projects", label: "All Projects" },
     { value: "users", label: "Users" },
-    { value: "reports", label: "Reports" },
-    { value: "settings", label: "Settings" },
-    { value: "complaints", label: "Complaints" },
-    { value: "trustmark", label: "Trustmark" },
-    { value: "inspections", label: "Inspections" },
-    { value: "chat", label: "Chat" },
+    { value: "complaint", label: "Complaint" },
+    { value: "trustmark", label: "Trustmark Audit" },
+    { value: "inspection", label: "C3 Inspection" },
+    { value: "otifications", label: "Notifications" },
+    { value: "activity", label: "Activity Screen" },
   ];
 
   const handleChange = (e) => {

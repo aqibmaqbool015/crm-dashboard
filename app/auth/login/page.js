@@ -37,6 +37,7 @@ export default function LoginPage() {
           setCredentials({
             user: userWithRole,
             token: response.data.token,
+            modules: response.data.modules || [],
           })
         );
 

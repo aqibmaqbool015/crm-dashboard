@@ -7,40 +7,57 @@ import { useSelector } from "react-redux";
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
   
-  // Get user from Redux store
-  const { userInfo } = useSelector((state) => state.auth);
+  // Get user and modules from Redux store
+  const { userInfo, modules } = useSelector((state) => state.auth);
 
-  // All menu items
-  const allMenuItems = [
-    { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
-    { name: "All Projects", icon: <Projector />, path: "/projects" },
-    { name: "Users", icon: <User />, path: "/users" },
-    { name: "Complaint", icon: <File />, path: "/complaint" },
-    { name: "Trustmark Audit", icon: <Settings />, path: "/trustmark" },
-    { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection" },
-    { name: "Notifications", icon: <AlertCircle />, path: "/notifications" },
-    { name: "Activity Screen", icon: <Activity />, path: "/activity" },
-    { name: "Chat", icon: <MessageSquare />, path: "/chat" },
+  // Dashboard is mandatory - always shown
+  const dashboardItem = { name: "Dashboard", icon: <LayoutDashboard />, path: "/", moduleKey: "dashboard" };
+
+  // Other menu items with their module keys
+  const otherMenuItems = [
+    { name: "All Projects", icon: <Projector />, path: "/projects", moduleKey: "projects" },
+    { name: "Users", icon: <User />, path: "/users", moduleKey: "users" },
+    { name: "Complaint", icon: <File />, path: "/complaint", moduleKey: "complaints" },
+    { name: "Trustmark Audit", icon: <Settings />, path: "/trustmark", moduleKey: "trustmarks" },
+    { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection", moduleKey: "inspections" },
+    { name: "Notifications", icon: <AlertCircle />, path: "/notifications", moduleKey: "notifications" },
+    { name: "Activity Screen", icon: <Activity />, path: "/activity", moduleKey: "activity" },
+    { name: "Chat", icon: <MessageSquare />, path: "/chat", moduleKey: "chat" },
   ];
 
-  // Only C3 Inspection for non-admin users
-  const userMenuItems = [
-    { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection" },
-  ];
+  // All menu items (for admin users)
+  const allMenuItems = [dashboardItem, ...otherMenuItems];
 
   // Determine which menu items to show
   const getMenuItems = () => {
     if (!userInfo) {
-      return userMenuItems; // Default to minimal menu
+      return [dashboardItem]; // Only Dashboard if not logged in
     }
     
-    // Check if user is admin (is_admin = true)
+    // Check if user is admin (is_admin = true) - admins see all menu items
     if (userInfo.is_admin === true || userInfo.role === 'admin') {
       return allMenuItems;
     }
     
-    // For non-admin users
-    return userMenuItems;
+    // For non-admin users, always include Dashboard, then filter others based on modules
+    if (!modules || modules.length === 0) {
+      return [dashboardItem]; // Only Dashboard if no modules
+    }
+
+    // Get enabled module keys from user's modules
+    const enabledModuleKeys = modules
+      .filter(module => module.is_enabled === true)
+      .map(module => module.module_key);
+
+    // Filter other menu items based on enabled modules
+    // Dashboard is always included
+    const filteredItems = otherMenuItems.filter(item => {
+      // Check if the menu item's module key is in the enabled modules
+      return enabledModuleKeys.includes(item.moduleKey);
+    });
+
+    // Always include Dashboard first, then filtered items
+    return [dashboardItem, ...filteredItems];
   };
 
   const menuItems = getMenuItems();

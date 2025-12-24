@@ -9,6 +9,7 @@ import {
   setLoading,
   setError,
 } from "@/lib/store/slices/dashboardSlice";
+import { logout } from "@/lib/store/slices/authSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -95,10 +96,7 @@ export default function DashboardPage() {
                         <button
                             onClick={() => {
                                 // Handle logout through Redux
-                                if (typeof window !== 'undefined') {
-                                    localStorage.removeItem("token");
-                                    localStorage.removeItem("user");
-                                }
+                                dispatch(logout());
                                 router.push("/auth/login");
                             }}
                             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
