@@ -130,6 +130,29 @@ export default function DetailPage() {
     }
   }, [dispatch, projectId]);
 
+  // Fetch project notes on page load
+  useEffect(() => {
+    const fetchNotesOnLoad = async () => {
+      if (projectId) {
+        try {
+          dispatch(setNotesLoading(true));
+          const response = await axiosClient.get(`/projects/${projectId}/notes`);
+
+          if (response.data) {
+            dispatch(setProjectNotes(response.data));
+          }
+        } catch (error) {
+          // Silently fail - notes will be fetched when user clicks "View Notes"
+          console.error("Failed to fetch notes on load:", error);
+        } finally {
+          dispatch(setNotesLoading(false));
+        }
+      }
+    };
+
+    fetchNotesOnLoad();
+  }, [dispatch, projectId]);
+
   // Handle textarea change
   const handleTextareaChange = (stageId, value) => {
     setTextAreaValues(prev => ({
@@ -252,8 +275,14 @@ export default function DetailPage() {
       );
 
       if (response.data) {
-        // Add to Redux state
-        dispatch(addProjectNote(response.data));
+        // Refetch all notes to ensure state is in sync with server
+        const notesResponse = await axiosClient.get(`/projects/${projectId}/notes`);
+        if (notesResponse.data) {
+          dispatch(setProjectNotes(notesResponse.data));
+        } else {
+          // Fallback: Add to Redux state if refetch fails
+          dispatch(addProjectNote(response.data));
+        }
 
         toast.success("Note added successfully!");
         setEditNoteValue("");
