@@ -55,16 +55,50 @@ export default function UsersPage() {
       dispatch(setLoading(true));
       const response = await axiosClient.get(`/admin/fetch-users?page=${page}`);
 
-      const transformedUsers = response?.data?.data?.map((user, index) => ({
-        id: user?.id,
-        number: (page - 1) * response.data.meta.per_page + index + 1,
-        name: user?.full_name,
-        email: user?.email,
-        moduleName: user?.module_name || "",
-        modules: user?.modules || [], // Store modules array if available
-        createdAt: user?.created_at,
-        formattedDate: formatDate(user?.created_at),
-      }));
+      const transformedUsers = response?.data?.data?.map((user, index) => {
+        // Get modules from API response - could be in modules array or module_name string
+        let modulesArray = [];
+        let moduleNameString = "";
+
+        // Check if modules is an array
+        if (Array.isArray(user?.modules) && user.modules.length > 0) {
+          modulesArray = user.modules;
+          // If modules is array of objects with module_key, extract keys
+          if (user.modules[0]?.module_key) {
+            moduleNameString = user.modules
+              .map((m) => m.module_key || m.title || m.name)
+              .join(", ");
+          } else if (typeof user.modules[0] === "string") {
+            // If modules is array of strings
+            moduleNameString = user.modules.join(", ");
+          }
+        } else if (user?.module_name) {
+          // If module_name is a string, split it and create array
+          moduleNameString = user.module_name;
+          modulesArray = user.module_name
+            .split(",")
+            .map((m) => m.trim())
+            .filter((m) => m);
+        } else if (user?.modules && typeof user.modules === "string") {
+          // If modules is a string
+          moduleNameString = user.modules;
+          modulesArray = user.modules
+            .split(",")
+            .map((m) => m.trim())
+            .filter((m) => m);
+        }
+
+        return {
+          id: user?.id,
+          number: (page - 1) * response.data.meta.per_page + index + 1,
+          name: user?.full_name,
+          email: user?.email,
+          moduleName: moduleNameString || "No Modules",
+          modules: modulesArray, // Store modules array
+          createdAt: user?.created_at,
+          formattedDate: formatDate(user?.created_at),
+        };
+      });
 
       dispatch(
         setUsers({
@@ -87,10 +121,24 @@ export default function UsersPage() {
   // Handle Edit button click
   const handleEditClick = (user) => {
     setSelectedUser(user);
-    // Parse existing modules
-    const existingModules = user.moduleName
-      ? user.moduleName.split(",").map((m) => m.trim().toLowerCase())
-      : [];
+    // Parse existing modules - prefer modules array over moduleName string
+    let existingModules = [];
+    
+    if (Array.isArray(user.modules) && user.modules.length > 0) {
+      // If modules is array of objects with module_key
+      if (user.modules[0]?.module_key) {
+        existingModules = user.modules.map((m) => m.module_key);
+      } else if (typeof user.modules[0] === "string") {
+        // If modules is array of strings
+        existingModules = user.modules;
+      }
+    } else if (user.moduleName) {
+      // Fallback to parsing moduleName string
+      existingModules = user.moduleName
+        .split(",")
+        .map((m) => m.trim().toLowerCase());
+    }
+    
     setSelectedModules(existingModules);
     dispatch(startUpdatingUser(user.id));
     setIsUpdateModalOpen(true);
@@ -238,9 +286,20 @@ export default function UsersPage() {
                         {user?.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 max-w-xs truncate">
-                          {user?.moduleName || 'No Modules'}
-                        </span>
+                        {user?.modules && Array.isArray(user.modules) && user.modules.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {user.modules.length} {user.modules.length === 1 ? 'Module' : 'Modules'}
+                            </span>
+                            <span className="text-xs text-gray-600 max-w-xs truncate" title={user.moduleName}>
+                              {user.moduleName}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            No Modules
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {user?.formattedDate}

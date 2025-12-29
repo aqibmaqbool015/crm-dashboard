@@ -22,7 +22,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     { name: "C3 Inspection", icon: <InspectIcon />, path: "/inspection", moduleKey: "inspections" },
     { name: "Notifications", icon: <AlertCircle />, path: "/notifications", moduleKey: "notifications" },
     { name: "Activity Screen", icon: <Activity />, path: "/activity", moduleKey: "activity" },
-    { name: "Chat", icon: <MessageSquare />, path: "/chat", moduleKey: "chat" },
+    // { name: "Chat", icon: <MessageSquare />, path: "/chat", moduleKey: "chat" },
   ];
 
   // All menu items (for admin users)

@@ -24,10 +24,10 @@ export default function CreateUserPage() {
     { value: "dashboard", label: "Dashboard" },
     { value: "projects", label: "All Projects" },
     { value: "users", label: "Users" },
-    { value: "complaint", label: "Complaint" },
-    { value: "trustmark", label: "Trustmark Audit" },
-    { value: "inspection", label: "C3 Inspection" },
-    { value: "otifications", label: "Notifications" },
+    { value: "complaints", label: "Complaint" },
+    { value: "trustmarks", label: "Trustmark Audit" },
+    { value: "inspections", label: "C3 Inspection" },
+    { value: "notifications", label: "Notifications" },
     { value: "activity", label: "Activity Screen" },
   ];
 
